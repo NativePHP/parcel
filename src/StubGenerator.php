@@ -71,11 +71,9 @@ final class StubGenerator
 
         return str_replace(
             "__BOX_PHAR_CONFIG__\n",
-            self::generatePharConfigStmt(
+            self::generateWebPharConfigStmt(
                 $alias,
-                $index,
-                $intercept,
-                $checkRequirements
+                $index
             ),
             $stub,
         );
@@ -167,6 +165,29 @@ final class StubGenerator
         if ([] === $stub) {
             return "// No PHAR config\n";
         }
+
+        return implode("\n", $stub)."\n";
+    }
+
+    private static function generateWebPharConfigStmt(
+        ?string $alias = null,
+        ?string $index = null
+    ): string {
+        $stub = [];
+
+        $stub[] = 'Phar::interceptFileFuncs();';
+
+        $stub[] = "Phar::mungServer(['REQUEST_URI', 'PHP_SELF', 'SCRIPT_NAME', 'SCRIPT_FILENAME']);";
+
+        $stub[] = 'Phar::webPhar(' . self::arg($alias) . ', ' . self::arg($index) . ');';
+
+        $stub[] = '';
+
+        $routerPath = null === $alias
+            ? "'phar://' . __FILE__ . '/pharside.php';"
+            : "'phar://{$alias}/pharside.php';";
+
+        $stub[] = "require {$routerPath}";
 
         return implode("\n", $stub)."\n";
     }
