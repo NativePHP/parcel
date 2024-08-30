@@ -184,8 +184,8 @@ final class StubGenerator
         $stub[] = '';
 
         $routerPath = null === $alias
-            ? "'phar://' . __FILE__ . '/pharside.php';"
-            : "'phar://{$alias}/pharside.php';";
+            ? "'phar://' . __FILE__ . '/phar-router.php';"
+            : "'phar://{$alias}/phar-router.php';";
 
         $stub[] = "require {$routerPath}";
 
