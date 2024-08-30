@@ -1,0 +1,39 @@
+{
+    "chmod": "0700",
+    "shebang": false,
+    "main": "public/index.php",
+    "directories": ["app", "bootstrap", "config", "database", "resources/views", "routes"],
+    "directories-bin": ["public", "resources/css", "resources/images", "resources/js"],
+    "files-bin": ["artisan", ".env", "composer.json", "phar-router.php", "box-helper.php"],
+    "finder": [
+        {
+            "notName": ["LICENSE","*.md","*.dist", "Makefile", "composer.json", "composer.lock"],
+            "exclude": [
+                "doc",
+                "docs",
+                "test",
+                "test_old",
+                "tests",
+                "Tests",
+                "bin",
+                "nativephp/php-bin",
+                "nativephp/electron/resources"
+            ],
+            "in": "vendor"
+        },
+        {
+            "notName": "*.sqlite",
+            "in": "database"
+        }
+    ],
+    "git-version": "package_version",
+    "output": "build/{{ APP_NAME }}",
+    "compression": "GZ",
+    "compactors": [
+        "KevinGH\\Box\\Compactor\\Php",
+        "KevinGH\\Box\\Compactor\\Json",
+        "KevinGH\\Box\\Compactor\\RealPathMod"
+    ],
+    "exclude-dev-files": false,
+    "exclude-composer-files": false
+}
