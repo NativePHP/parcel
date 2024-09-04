@@ -27,7 +27,7 @@
         }
     ],
     "git-version": "package_version",
-    "output": "build/app",
+    "output": "build/__nativephp_app_bundle",
     "compression": "GZ",
     "compactors": [
         "KevinGH\\Box\\Compactor\\Php",
