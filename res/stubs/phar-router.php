@@ -9,6 +9,11 @@ if (php_sapi_name() == "cli" && $argc > 0 && $argv[1] === 'artisan') {
     return;
 }
 
+if (isset($argv[1])) {
+    require 'serverless.php';
+    return;
+}
+
 $url = $_SERVER['REQUEST_URI'];
 
 error_log($url);
