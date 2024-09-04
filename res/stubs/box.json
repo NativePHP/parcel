@@ -7,7 +7,7 @@
     "files-bin": ["artisan", ".env", "composer.json", "phar-router.php", "box-helper.php"],
     "finder": [
         {
-            "notName": ["LICENSE","*.md","*.dist", "Makefile", "composer.json", "composer.lock"],
+            "notName": ["LICENSE", "*.md", "*.dist", "Makefile", "composer.json", "composer.lock"],
             "exclude": [
                 "doc",
                 "docs",
@@ -27,7 +27,7 @@
         }
     ],
     "git-version": "package_version",
-    "output": "build/{{ APP_NAME }}",
+    "output": "build/app",
     "compression": "GZ",
     "compactors": [
         "KevinGH\\Box\\Compactor\\Php",
