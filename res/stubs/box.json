@@ -3,7 +3,7 @@
     "shebang": false,
     "main": "public/index.php",
     "directories": ["app", "bootstrap", "config", "database", "resources/views", "routes"],
-    "directories-bin": ["public", "resources/css", "resources/images", "resources/js"],
+    "directories-bin": ["public", "resources/css", "resources/js"],
     "files-bin": ["artisan", ".env", "composer.json", "phar-router.php", "box-helper.php"],
     "finder": [
         {
