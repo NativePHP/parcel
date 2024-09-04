@@ -173,15 +173,12 @@ final class StubGenerator
         ?string $alias = null,
         ?string $index = null
     ): string {
-        $stub = [];
-
-        $stub[] = 'Phar::interceptFileFuncs();';
-
-        $stub[] = "Phar::mungServer(['REQUEST_URI', 'PHP_SELF', 'SCRIPT_NAME', 'SCRIPT_FILENAME']);";
-
-        $stub[] = 'Phar::webPhar(' . self::arg($alias) . ', ' . self::arg($index) . ');';
-
-        $stub[] = '';
+        $stub = [
+            'Phar::interceptFileFuncs();',
+            "Phar::mungServer(['REQUEST_URI', 'PHP_SELF', 'SCRIPT_NAME', 'SCRIPT_FILENAME']);",
+            'Phar::webPhar(' . self::arg($alias) . ', ' . self::arg($index) . ');',
+            '',
+        ];
 
         $routerPath = null === $alias
             ? "'phar://' . __FILE__ . '/phar-router.php';"
