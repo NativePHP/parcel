@@ -2,6 +2,10 @@
     "chmod": "0700",
     "shebang": false,
     "main": "public/index.php",
+    "banner": [
+        "This is a NativePHP bundle",
+        "https://nativephp.com/"
+    ],
     "directories": ["app", "bootstrap", "config", "database", "resources/views", "routes"],
     "directories-bin": ["public", "resources/css", "resources/js"],
     "files-bin": ["artisan", ".env", "composer.json", "phar-router.php", "box-helper.php"],
@@ -20,6 +24,14 @@
                 "nativephp/electron/resources"
             ],
             "in": "vendor"
+        },
+        {
+            "exclude": [
+                "logs",
+                "app/livewire-tmp",
+                "framework/sessions"
+            ],
+            "in": "storage"
         },
         {
             "notName": "*.sqlite",
