@@ -15,7 +15,13 @@ class RealPathMod implements Compactor
         }
 
         if (preg_match('/\.php/', $file)) {
-            return preg_replace('/([^>a-z])realpath\(/', '$1nativephp_rp(', $contents);
+            // Handle fully qualified calls (\realpath)
+            $contents = preg_replace('/([^>a-zA-Z0-9_\\\\])\\\\realpath\(/', '$1\\nativephp_rp(', $contents);
+
+            // Handle regular calls (realpath)
+            $contents = preg_replace('/([^>a-zA-Z0-9_\\\\])realpath\(/', '$1\\nativephp_rp(', $contents);
+
+            return $contents;
         }
 
         return $contents;
