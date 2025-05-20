@@ -2,27 +2,31 @@
 
 function nativephp_rp($value = null): mixed
 {
-    // Force the path to be relative to the PHAR root
-    $path = str(Phar::running());
-    $value = str($value);
+    // Normalize slashes for cross-platform compatibility
+    $pharPath = str_replace('\\', '/', Phar::running());
+    $valPath = str_replace('\\', '/', $value);
 
-    if ($value->contains($path) || $value->startsWith('/')) {
-        if ($value->endsWith('/') || is_dir($value->toString())) {
-            $value = $value->finish('/');
+    // Check for absolute paths (Windows and Unix)
+    $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/)/', $valPath);
+
+    if (str_contains($valPath, $pharPath) || $isAbsolute) {
+        if (str_ends_with($valPath, '/') || is_dir($value->toString())) {
+            $valPath = rtrim($valPath, '/\\') . '/';
         }
-
-        return $value->toString();
+        return $valPath;
     }
 
-    if ($value->startsWith('./')) {
-        $value = $value->ltrim('.');
+    if (str_starts_with($valPath, './')) {
+        $valPath = ltrim($valPath, '.');
     }
 
-    $path = $path->append($value->start('/'));
+    // Ensure leading slash for relative paths
+    $valPath = '/' . ltrim($valPath, '/\\');
+    $fullPath = $pharPath . $valPath;
 
-    if (is_dir($path)) {
-        $path = $path->finish('/');
+    if (is_dir($fullPath)) {
+        $fullPath = rtrim($fullPath, '/\\') . '/';
     }
 
-    return $path->toString();
+    return $fullPath;
 }

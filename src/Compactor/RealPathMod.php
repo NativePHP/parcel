@@ -11,7 +11,7 @@ class RealPathMod implements Compactor
         }
 
         if (preg_match('/.*\/LoadConfiguration\.php/', $file)) {
-            return str_replace('$directory = $file->getPath();', '$directory = nativephp_rp($file->getPath());', $contents);
+            return str_replace('$directory = $file->getPath();', '$directory = \nativephp_rp($file->getPath());', $contents);
         }
 
         if (preg_match('/.*\/BladeIconsServiceProvider\.php/', $file)) {
