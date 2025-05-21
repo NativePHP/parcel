@@ -10,7 +10,7 @@ function nativephp_rp($value = null): mixed
     $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/)/', $valPath);
 
     if (str_contains($valPath, $pharPath) || $isAbsolute) {
-        if (str_ends_with($valPath, '/') || is_dir($value->toString())) {
+        if (str_ends_with($valPath, '/') || is_dir($value)) {
             $valPath = rtrim($valPath, '/\\') . '/';
         }
         return $valPath;
