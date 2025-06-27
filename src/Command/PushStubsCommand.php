@@ -50,19 +50,16 @@ class PushStubsCommand extends Command
             return Command::FAILURE;
         }
 
-        // Check if it's a Laravel project
         if (!$this->filesystem->exists(Path::join($targetDir, 'artisan'))) {
-            $io->warning("Target directory doesn't appear to be a Laravel project (missing artisan file)");
-            if (!$io->confirm('Continue anyway?', false)) {
-                return Command::FAILURE;
-            }
+            $io->error("Target directory doesn't appear to be a Laravel project (missing artisan file)");
+            return Command::FAILURE;
         }
 
         $stubsDir = $this->getStubsDirectory();
-        $copiedFiles = [];
 
         // Copy individual stub files
         $stubFiles = [
+            'box.json',
             'box-helper.php',
             'phar-router.php',
             'serverless.php'
@@ -72,138 +69,57 @@ class PushStubsCommand extends Command
             $source = Path::join($stubsDir, $stubFile);
             $target = Path::join($targetDir, $stubFile);
 
+            if (!$this->filesystem->exists($source)) {
+                continue;
+            }
+
             if ($this->filesystem->exists($target) && !$force) {
-                $io->note("Skipping {$stubFile} (already exists, use --force to overwrite)");
                 continue;
             }
 
             $this->filesystem->copy($source, $target);
-            $copiedFiles[] = $stubFile;
-            $io->text("✓ Copied {$stubFile}");
         }
 
-        // Copy App/Native directory if it exists
-        $nativeDir = Path::join($stubsDir, 'App', 'Native');
-        if ($this->filesystem->exists($nativeDir)) {
-            $targetNativeDir = Path::join($targetDir, 'app', 'Native');
-            
-            if (!$this->filesystem->exists($targetNativeDir) || $force) {
-                $this->filesystem->mirror($nativeDir, $targetNativeDir);
-                $copiedFiles[] = 'app/Native/';
-                $io->text("✓ Copied app/Native/ directory");
-            } else {
-                $io->note("Skipping app/Native/ directory (already exists, use --force to overwrite)");
-            }
-        }
+        // $nativeDir = Path::join($stubsDir, 'App', 'Native');
+        // if ($this->filesystem->exists($nativeDir)) {
+        //     $targetNativeDir = Path::join($targetDir, 'app', 'Native');
+        //
+        //     if (!$this->filesystem->exists($targetNativeDir) || $force) {
+        //         $this->filesystem->mirror($nativeDir, $targetNativeDir);
+        //     }
+        // }
 
-        // Handle box.json configuration
-        $this->handleBoxJson($targetDir, $force, $io);
-
-        if (empty($copiedFiles)) {
-            $io->info('No files were copied (all files already exist, use --force to overwrite)');
-        } else {
-            $io->success(sprintf('Successfully pushed %d file(s) to %s', count($copiedFiles), $targetDir));
-        }
-
-        $io->note([
-            'Next steps:',
-            '1. Review and customize the box.json configuration',
-            '2. Run: parcel compile',
-            '3. Your PHAR will be created in the build/ directory'
-        ]);
 
         return Command::SUCCESS;
     }
 
     private function getStubsDirectory(): string
     {
-        // Get the directory where this package is installed
-        $reflection = new \ReflectionClass($this);
-        $packageDir = dirname(dirname($reflection->getFileName()));
-        
-        return Path::join($packageDir, '..', 'stubs');
-    }
-
-    private function handleBoxJson(string $targetDir, bool $force, SymfonyStyle $io): void
-    {
-        $boxJsonPath = Path::join($targetDir, 'box.json');
-        $stubBoxJsonPath = Path::join($this->getStubsDirectory(), 'box.json');
-
-        if ($this->filesystem->exists($boxJsonPath) && !$force) {
-            $io->note('Skipping box.json (already exists, use --force to overwrite)');
-            return;
-        }
-
-        if (!$this->filesystem->exists($stubBoxJsonPath)) {
-            $io->warning('Stub box.json not found, creating basic configuration');
-            $this->createBasicBoxJson($boxJsonPath);
-        } else {
-            // Copy and customize the box.json
-            $boxJsonContent = file_get_contents($stubBoxJsonPath);
+        // Try multiple approaches to find the stubs directory
+        $possiblePaths = [
+            // Local development or installation
+            __DIR__ . '/../../stubs',
             
-            // Replace placeholder values with project-specific ones
-            $projectName = basename($targetDir);
-            $boxJsonContent = str_replace(
-                '"output": "build/__nativephp_app_bundle"',
-                '"output": "build/' . $projectName . '.phar"',
-                $boxJsonContent
-            );
-
-            // Add RealPathMod compactor to the configuration
-            $boxJson = json_decode($boxJsonContent, true);
-            if (!in_array('Parcel\\Compactor\\RealPathMod', $boxJson['compactors'] ?? [])) {
-                $boxJson['compactors'][] = 'Parcel\\Compactor\\RealPathMod';
-            }
-
-            $this->filesystem->dumpFile($boxJsonPath, json_encode($boxJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        }
-
-        $io->text("✓ Created box.json configuration");
-    }
-
-    private function createBasicBoxJson(string $path): void
-    {
-        $projectName = basename(dirname($path));
-        $basicConfig = [
-            'chmod' => '0700',
-            'shebang' => false,
-            'main' => 'public/index.php',
-            'banner' => [
-                'This is a NativePHP bundle',
-                'https://nativephp.com/'
-            ],
-            'directories' => ['app', 'bootstrap', 'config', 'database', 'resources/views', 'routes'],
-            'directories-bin' => ['public', 'resources/css', 'resources/js'],
-            'files-bin' => ['artisan', '.env', 'composer.json', 'phar-router.php', 'box-helper.php'],
-            'finder' => [
-                [
-                    'notName' => ['LICENSE', '*.md', '*.dist', 'Makefile', 'composer.json', 'composer.lock'],
-                    'exclude' => [
-                        'doc', 'docs', 'test', 'test_old', 'tests', 'Tests', 'bin',
-                        'nativephp/php-bin', 'nativephp/electron/resources'
-                    ],
-                    'in' => 'vendor'
-                ],
-                [
-                    'exclude' => ['logs', 'app/livewire-tmp', 'framework/sessions'],
-                    'in' => 'storage'
-                ],
-                [
-                    'notName' => '*.sqlite',
-                    'in' => 'database'
-                ]
-            ],
-            'output' => "build/{$projectName}.phar",
-            'compression' => 'GZ',
-            'compactors' => [
-                'KevinGH\\Box\\Compactor\\Php',
-                'KevinGH\\Box\\Compactor\\Json',
-                'Parcel\\Compactor\\RealPathMod'
-            ],
-            'exclude-dev-files' => false,
-            'exclude-composer-files' => false
+            // Global installation via composer  
+            dirname(__DIR__, 3) . '/nativephp/parcel/stubs',
+            
+            // Alternative global installation path
+            dirname(__DIR__, 4) . '/stubs',
+            
+            // Vendor installation
+            dirname(__DIR__, 2) . '/stubs',
         ];
 
-        $this->filesystem->dumpFile($path, json_encode($basicConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        foreach ($possiblePaths as $path) {
+            $realPath = realpath($path);
+            if ($realPath && is_dir($realPath) && $this->filesystem->exists(Path::join($realPath, 'box.json'))) {
+                return $realPath;
+            }
+        }
+
+        // Default fallback to local development path
+        return __DIR__ . '/../../stubs';
     }
+
+
 }
