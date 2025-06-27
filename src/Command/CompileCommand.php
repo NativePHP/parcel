@@ -35,8 +35,6 @@ class CompileCommand extends Command
             ->addArgument('working-dir', InputArgument::OPTIONAL, 'Working directory for compilation', '.')
             ->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Path to box.json configuration file')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug output')
-            ->addOption('no-parallel', null, InputOption::VALUE_NONE, 'Disable parallel processing')
-            ->addOption('no-restart', null, InputOption::VALUE_NONE, 'Do not restart the PHP process')
             ->setHelp('This command compiles a Laravel project into a PHAR using Box with NativePHP enhancements.');
     }
 
@@ -66,29 +64,19 @@ class CompileCommand extends Command
         }
 
         if (!$this->filesystem->exists($configFile)) {
-            $io->error("No box.json configuration found. Run 'parcel push-stubs' first to create one.");
+            $io->error("No box.json configuration found.");
             return Command::FAILURE;
         }
 
-        // Check for composer.json to ensure we're in a PHP project
         if (!$this->filesystem->exists(Path::join($workingDir, 'composer.json'))) {
-            $io->warning("No composer.json found in the working directory");
-            if (!$io->confirm('Continue anyway?', false)) {
-                return Command::FAILURE;
-            }
+            $io->error("No composer.json found in the working directory");
+            return Command::FAILURE;
         }
 
-        // Verify Box is available
-        $boxBinary = $this->findBoxBinary($workingDir);
-        if (!$boxBinary) {
-            $io->error('Box binary not found. Make sure humbug/box is installed via Composer.');
-            $io->note([
-                'To install Box, run:',
-                '  composer require --dev humbug/box',
-                '',
-                'Or install it globally:',
-                '  composer global require humbug/box'
-            ]);
+        // Use Box from vendor directory
+        $boxBinary = $this->resolveBoxBinary($workingDir);
+        if (!$this->filesystem->exists($boxBinary)) {
+            $io->error('Box binary not found at ./vendor/bin/box.');
             return Command::FAILURE;
         }
 
@@ -102,12 +90,6 @@ class CompileCommand extends Command
         // Add options
         if ($input->getOption('debug')) {
             $boxArgs[] = '--debug';
-        }
-        if ($input->getOption('no-parallel')) {
-            $boxArgs[] = '--no-parallel';
-        }
-        if ($input->getOption('no-restart')) {
-            $boxArgs[] = '--no-restart';
         }
 
         // Add verbosity
@@ -131,64 +113,37 @@ class CompileCommand extends Command
 
         if ($exitCode === 0) {
             $io->success('PHAR compilation completed successfully!');
-            
-            // Try to show the output file information
             $this->showOutputInfo($configFile, $workingDir, $io);
         } else {
             $io->error('PHAR compilation failed!');
-            $io->text('Error output:');
-            $io->text($process->getErrorOutput());
+            
+            $errorOutput = $process->getErrorOutput();
+            if (!empty($errorOutput)) {
+                $io->text($errorOutput);
+            }
         }
 
         return $exitCode;
     }
 
-    private function findBoxBinary(string $workingDir): ?string
-    {
-        // Try local vendor/bin/box first
-        $localBox = Path::join($workingDir, 'vendor', 'bin', 'box');
-        if ($this->filesystem->exists($localBox)) {
-            return $localBox;
-        }
-
-        // Try global composer installation
-        $globalComposerDir = getenv('COMPOSER_HOME') ?: (getenv('HOME') . '/.composer');
-        $globalBox = Path::join($globalComposerDir, 'vendor', 'bin', 'box');
-        if ($this->filesystem->exists($globalBox)) {
-            return $globalBox;
-        }
-
-        // Try to find in PATH
-        $process = new Process(['which', 'box']);
-        $process->run();
-        if ($process->isSuccessful()) {
-            return trim($process->getOutput());
-        }
-
-        return null;
-    }
 
     private function showOutputInfo(string $configFile, string $workingDir, SymfonyStyle $io): void
     {
-        try {
-            $config = json_decode(file_get_contents($configFile), true);
-            $outputPath = $config['output'] ?? null;
+        $config = json_decode(file_get_contents($configFile), true);
+        $outputPath = $config['output'] ?? null;
+        
+        if ($outputPath) {
+            $fullOutputPath = Path::isAbsolute($outputPath) 
+                ? $outputPath 
+                : Path::join($workingDir, $outputPath);
             
-            if ($outputPath) {
-                $fullOutputPath = Path::isAbsolute($outputPath) 
-                    ? $outputPath 
-                    : Path::join($workingDir, $outputPath);
-                
-                if ($this->filesystem->exists($fullOutputPath)) {
-                    $fileSize = filesize($fullOutputPath);
-                    $io->definitionList(
-                        ['Output file' => $fullOutputPath],
-                        ['File size' => $this->formatBytes($fileSize)]
-                    );
-                }
+            if ($this->filesystem->exists($fullOutputPath)) {
+                $fileSize = filesize($fullOutputPath);
+                $io->definitionList(
+                    ['Output file' => $fullOutputPath],
+                    ['File size' => $this->formatBytes($fileSize)]
+                );
             }
-        } catch (\Exception $e) {
-            // Ignore errors when trying to show output info
         }
     }
 
@@ -198,5 +153,35 @@ class CompileCommand extends Command
         $factor = floor((strlen((string) $bytes) - 1) / 3);
         
         return sprintf('%.2f %s', $bytes / (1024 ** $factor), $units[$factor]);
+    }
+
+    private function resolveBoxBinary(string $workingDir): string
+    {
+        // When in local development, prefer the vendor/bin/box binary
+        $localBoxBinary = Path::join($workingDir, 'vendor/bin/box');
+        if ($this->filesystem->exists($localBoxBinary)) {
+            return $localBoxBinary;
+        }
+
+        // Find Box in global Parcel installation
+        $globalBoxBinary = Path::join(dirname(__DIR__, 2), 'vendor', 'bin', 'box');
+        if ($this->filesystem->exists($globalBoxBinary)) {
+            return $globalBoxBinary;
+        }
+
+        // Fallback to PATH-based discovery
+        $command = PHP_OS_FAMILY === 'Windows' ? ['where', 'box'] : ['which', 'box'];
+        $process = new Process($command);
+        $process->run();
+        
+        if ($process->isSuccessful()) {
+            $output = trim($process->getOutput());
+            if (!empty($output)) {
+                $lines = explode("\n", $output);
+                return trim($lines[0]);
+            }
+        }
+
+        return Path::join($workingDir, 'vendor', 'bin', 'box');
     }
 }
