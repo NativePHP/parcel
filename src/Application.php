@@ -14,20 +14,11 @@ class Application extends SymfonyApplication
 {
     public function __construct()
     {
-        parent::__construct('Parcel', '1.0.0');
+        parent::__construct('Parcel');
 
         $this->add(new PushStubsCommand);
         $this->add(new PatchComposerCommand);
         $this->add(new PrepareCommand);
         $this->add(new CompileCommand);
-    }
-
-    public function getLongVersion(): string
-    {
-        return sprintf(
-            '<info>%s</info> version <comment>%s</comment> - Laravel PHAR bundler for NativePHP',
-            $this->getName(),
-            $this->getVersion()
-        );
     }
 }
