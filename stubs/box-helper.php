@@ -1,20 +1,24 @@
 <?php
 
-function nativephp_rp($value = null): mixed
+function nativephp_rp($value = null, $pharPath = null): mixed
 {
     if ($value === null || $value === '') {
         return $value;
     }
 
     // Normalize slashes for cross-platform compatibility
-    $pharPath = str_replace('\\', '/', Phar::running());
+    if ($pharPath === null) {
+        $pharPath = str_replace('\\', '/', Phar::running());
+    } else {
+        $pharPath = str_replace('\\', '/', $pharPath);
+    }
     $valPath = str_replace('\\', '/', (string) $value);
 
     // Check for absolute paths (Windows: C:/, D:/, etc. and Unix: /)
     $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/|\\\\)/', $valPath);
 
     // If it's already an absolute path or contains PHAR path, normalize and return
-    if (str_contains($valPath, $pharPath) || $isAbsolute) {
+    if ((! empty($pharPath) && str_contains($valPath, $pharPath)) || $isAbsolute) {
         // Clean up the path
         $normalizedPath = $valPath;
 
@@ -36,7 +40,13 @@ function nativephp_rp($value = null): mixed
 
     // Ensure leading slash for relative paths and combine with PHAR path
     $valPath = '/'.ltrim($valPath, '/\\');
-    $fullPath = $pharPath.$valPath;
+
+    // If not in PHAR context, make absolute using current working directory
+    if (empty($pharPath)) {
+        $fullPath = str_replace('\\', '/', getcwd()).$valPath;
+    } else {
+        $fullPath = $pharPath.$valPath;
+    }
 
     // For directories, ensure trailing slash (but only if it's actually a directory)
     if (is_dir($fullPath) && ! str_ends_with($fullPath, '/')) {
