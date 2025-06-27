@@ -2,35 +2,45 @@
 
 function nativephp_rp($value = null): mixed
 {
+    if ($value === null || $value === '') {
+        return $value;
+    }
+
     // Normalize slashes for cross-platform compatibility
     $pharPath = str_replace('\\', '/', Phar::running());
-    $valPath = str_replace('\\', '/', $value);
+    $valPath = str_replace('\\', '/', (string) $value);
 
-    // Check for absolute paths (Windows and Unix)
-    $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/)/', $valPath);
+    // Check for absolute paths (Windows: C:/, D:/, etc. and Unix: /)
+    $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/|\\\\)/', $valPath);
 
-    // If it's an absolute path, just return it with a trailing slash
+    // If it's already an absolute path or contains PHAR path, normalize and return
     if (str_contains($valPath, $pharPath) || $isAbsolute) {
-        // If the path is a directory, ensure it has a trailing slash
-        if (str_ends_with($valPath, '/') || is_dir($value)) {
-            $valPath = rtrim($valPath, '/\\') . '/';
+        // Clean up the path
+        $normalizedPath = $valPath;
+        
+        // For directories, ensure trailing slash (but only if it's actually a directory)
+        if (is_dir($value) && !str_ends_with($normalizedPath, '/')) {
+            $normalizedPath .= '/';
         }
 
-        return str_replace('/', DIRECTORY_SEPARATOR, $valPath);
+        return str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath);
     }
 
-    // Check for relative paths
+    // Handle relative paths
     if (str_starts_with($valPath, './')) {
-        $valPath = ltrim($valPath, '.');
+        $valPath = substr($valPath, 2);
+    } elseif (str_starts_with($valPath, '../')) {
+        // Handle parent directory references
+        $valPath = '/' . $valPath;
     }
 
-    // Ensure leading slash for relative paths
+    // Ensure leading slash for relative paths and combine with PHAR path
     $valPath = '/' . ltrim($valPath, '/\\');
     $fullPath = $pharPath . $valPath;
 
-    // If the path is a directory, ensure it has a trailing slash
-    if (str_ends_with($fullPath, '/') || is_dir($fullPath)) {
-        $fullPath = rtrim($fullPath, '/\\') . '/';
+    // For directories, ensure trailing slash (but only if it's actually a directory)
+    if (is_dir($fullPath) && !str_ends_with($fullPath, '/')) {
+        $fullPath .= '/';
     }
 
     return str_replace('/', DIRECTORY_SEPARATOR, $fullPath);
