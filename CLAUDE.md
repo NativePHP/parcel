@@ -6,7 +6,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Parcel** is a standalone Laravel PHAR bundler specifically designed for NativePHP applications. Rather than maintaining a fork of Box, Parcel uses Box as a dependency and provides specialized tooling for Laravel/NativePHP deployment with enhanced path handling and PHAR optimization.
 
-### Key Enhancements Over Base Box
+## Development Commands
+
+### Essential Commands
+- `composer install` - Install dependencies
+- `composer qa` - Run full quality assurance (lint, static analysis, tests)
+- `composer test` - Run Pest tests in parallel
+- `composer pint` - Run Laravel Pint code formatter
+- `composer phpstan` - Run PHPStan static analysis
+- `composer static` - Run both Pint and PHPStan
+
+### CLI Tool Commands
+- `bin/parcel prepare [target-dir]` - Prepare Laravel project (combines push-stubs and patch-composer)
+- `bin/parcel push-stubs [target-dir]` - Push NativePHP stubs to Laravel project
+- `bin/parcel patch-composer [target-dir]` - Patch composer.json for PHAR compatibility
+- `bin/parcel compile [working-dir]` - Compile Laravel project to PHAR using Box
+
+### Global Installation Testing
+- `composer global require nativephp/parcel` - Install globally for testing
+- `parcel prepare` - Test global preparation
+- `parcel compile` - Test compilation from any directory
+
+## Architecture
+
+### Core Components
+
+**Symfony Console Application (`src/Application.php`):**
+- Main entry point that registers all commands
+- Simple extension of Symfony Console Application
+
+**Commands (`src/Command/`):**
+- `PrepareCommand` - Streamlined project setup combining push-stubs and patch-composer
+- `PushStubsCommand` - Copies NativePHP stubs to Laravel projects
+- `PatchComposerCommand` - Modifies composer.json for PHAR compilation
+- `CompileCommand` - Wraps Box compilation with NativePHP enhancements
 
 **RealPathMod Compactor (`src/Compactor/RealPathMod.php`):**
 - Replaces `realpath()` calls with `nativephp_rp()` for PHAR-compatible path resolution
@@ -14,101 +47,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Includes hotfix for Blade Icons service provider path resolution
 - Modifies SplFileInfo to add proper `getRealPath()` method
 
-**NativePHP Path Helper (`res/stubs/box-helper.php`):**
-- Cross-platform path normalization with Windows/Unix support
-- Intelligent absolute vs relative path handling within PHAR context
-- Directory trailing slash normalization for consistency
+### Key Stub Files
+
+**NativePHP Path Helper (`stubs/box-helper.php`):**
+- Cross-platform path normalization with `nativephp_rp()` function
+- Windows/Unix path compatibility
 - PHAR-aware path resolution that works with Laravel's expectations
 
-**PHAR Router (`res/stubs/phar-router.php`):**
+**PHAR Router (`stubs/phar-router.php`):**
 - Web server routing for Laravel applications running from PHAR
-- Static asset serving (CSS, JS, images) with proper MIME types
-- Artisan command-line interface support
-- Entry point routing to Laravel's public/index.php
+- Static asset serving with proper MIME types
+- Artisan CLI support
 
-**NativePHP Bundle Configuration (`res/stubs/box.json`):**
-- Pre-configured for Laravel application structure
-- Optimized file exclusions for smaller bundle size
-- NativePHP-specific directory and file inclusions
+**Bundle Configuration (`stubs/box.json`):**
+- Pre-configured Box settings for Laravel/NativePHP
+- Optimized file exclusions and inclusions
 - Integrated RealPathMod compactor usage
 
-## Development Commands
+**Custom Request Class (`stubs/App/Native/Request.php`):**
+- Laravel Request class for CLI-to-HTTP conversion in NativePHP context
 
-### Essential Commands
-- `composer install` - Install dependencies
-- `bin/parcel push-stubs [target-dir]` - Push NativePHP stubs to Laravel project
-- `bin/parcel compile [working-dir]` - Compile Laravel project to PHAR using Box
-
-### Global Installation Testing
-- `composer global require parcel/parcel` - Install globally for testing
-- `parcel push-stubs /path/to/laravel-project` - Test global installation
-- `parcel compile` - Test compilation from any directory
-
-### Development Workflow
-- `composer install` - Install dependencies
-- `./bin/parcel push-stubs tests/fixtures/laravel-app` - Test stub pushing
-- `./bin/parcel compile tests/fixtures/laravel-app` - Test compilation
-
-## Architecture
-
-### Core Components
-
-**Main Classes:**
-- `Parcel\Application` - Symfony Console application with Parcel commands
-- `Parcel\Command\PushStubsCommand` - Copies NativePHP stubs to Laravel projects
-- `Parcel\Command\CompileCommand` - Wraps Box compilation with NativePHP enhancements
-- `Parcel\Compactor\RealPathMod` - Custom compactor for Laravel PHAR path compatibility
-
-**Architecture Pattern:**
+### Architecture Patterns
 - **Composition over Inheritance**: Uses Box as dependency rather than forking
-- **Command Pattern**: Symfony Console commands that orchestrate Box operations
-- **Decorator Pattern**: RealPathMod compactor enhances Box's compilation process
+- **Command Pattern**: Symfony Console commands orchestrate Box operations
+- **Compactor Pattern**: RealPathMod enhances Box's compilation process
 
-### Workflow
-1. **Push Stubs**: Copy NativePHP stubs and create optimized box.json for Laravel project
-2. **Compile**: Execute Box compilation with RealPathMod compactor and Laravel-specific settings
-3. **Box Integration**: Use Process component to call `vendor/bin/box` with enhanced configuration
+## Testing Framework
 
-### Project Structure
-```
-parcel/
-├── bin/parcel              # CLI entry point
-├── src/
-│   ├── Application.php     # Symfony Console app
-│   ├── Command/           # Push stubs & compile commands
-│   └── Compactor/         # RealPathMod compactor
-├── stubs/                 # NativePHP stub files
-└── composer.json          # Global CLI tool configuration
-```
+- **Pest PHP** - Main testing framework
+- Tests organized in `Feature/` and `Unit/` directories
+- `tests/Pest.php` configures test base classes
+- Run individual tests: `./vendor/bin/pest tests/Unit/NativePhpRpTest.php`
 
-### Key Files
-- `bin/parcel` - CLI entry point for global installation
-- `src/Compactor/RealPathMod.php` - **Laravel-specific path compactor**
-- `stubs/box-helper.php` - **NativePHP path resolution helper**
-- `stubs/phar-router.php` - **Laravel PHAR web routing**
-- `stubs/box.json` - **NativePHP bundle configuration template**
-- `stubs/App/Native/Request.php` - **Custom Laravel Request class for CLI-to-HTTP conversion**
+## Code Quality Tools
+
+- **Laravel Pint** - Code formatting with Laravel preset
+- **PHPStan Level 5** - Static analysis on `src/` directory
+- Configuration files: `pint.json`, `phpstan.neon`
 
 ## Development Notes
 
-- PHP 8.2+ required 
-- Uses Box as dependency instead of fork
-- Symfony Console for CLI commands
-- Process component for Box integration
-- Minimal codebase focused on NativePHP-specific functionality
+- PHP 8.2+ required with ext-json and ext-phar
+- Uses Box 4.0+ as primary dependency
+- Symfony Console/Filesystem/Process components for CLI functionality
+- Global CLI tool installed via Composer bin
 
-## Parcel-Specific Development
+### Path Resolution Architecture
 
-When working on Parcel enhancements:
-
-**Path Resolution Issues:** Most Laravel PHAR issues stem from `realpath()` not working in PHAR context. The RealPathMod compactor automatically replaces these calls with `nativephp_rp()`.
-
-**Testing Laravel Integration:** Use the NativePHP bundle configuration (`res/stubs/box.json`) as a starting point for Laravel application packaging.
-
-**Cross-Platform Compatibility:** Path handling code must work on both Windows and Unix systems - the `nativephp_rp()` function handles this normalization.
-
-**Recent Fixes Applied:**
-- Path normalization improvements for Windows compatibility
-- Blade Icons service provider path resolution
-- Directory trailing slash handling
-- String vs object handling in path operations
+Most Laravel PHAR issues stem from `realpath()` not working in PHAR context. The RealPathMod compactor automatically replaces these calls with `nativephp_rp()` which provides cross-platform path normalization and PHAR-aware resolution.
