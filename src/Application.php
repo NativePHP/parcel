@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Parcel;
 
 use Parcel\Command\CompileCommand;
+use Parcel\Command\PatchComposerCommand;
 use Parcel\Command\PushStubsCommand;
 use Symfony\Component\Console\Application as SymfonyApplication;
 
@@ -15,6 +16,7 @@ class Application extends SymfonyApplication
         parent::__construct('Parcel', '1.0.0');
 
         $this->add(new PushStubsCommand());
+        $this->add(new PatchComposerCommand());
         $this->add(new CompileCommand());
     }
 
