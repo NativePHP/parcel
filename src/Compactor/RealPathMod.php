@@ -1,6 +1,10 @@
 <?php
 
-namespace KevinGH\Box\Compactor;
+declare(strict_types=1);
+
+namespace Parcel\Compactor;
+
+use KevinGH\Box\Compactor\Compactor;
 
 class RealPathMod implements Compactor
 {
