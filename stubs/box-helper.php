@@ -17,9 +17,9 @@ function nativephp_rp($value = null): mixed
     if (str_contains($valPath, $pharPath) || $isAbsolute) {
         // Clean up the path
         $normalizedPath = $valPath;
-        
+
         // For directories, ensure trailing slash (but only if it's actually a directory)
-        if (is_dir($value) && !str_ends_with($normalizedPath, '/')) {
+        if (is_dir($value) && ! str_ends_with($normalizedPath, '/')) {
             $normalizedPath .= '/';
         }
 
@@ -31,15 +31,15 @@ function nativephp_rp($value = null): mixed
         $valPath = substr($valPath, 2);
     } elseif (str_starts_with($valPath, '../')) {
         // Handle parent directory references
-        $valPath = '/' . $valPath;
+        $valPath = '/'.$valPath;
     }
 
     // Ensure leading slash for relative paths and combine with PHAR path
-    $valPath = '/' . ltrim($valPath, '/\\');
-    $fullPath = $pharPath . $valPath;
+    $valPath = '/'.ltrim($valPath, '/\\');
+    $fullPath = $pharPath.$valPath;
 
     // For directories, ensure trailing slash (but only if it's actually a directory)
-    if (is_dir($fullPath) && !str_ends_with($fullPath, '/')) {
+    if (is_dir($fullPath) && ! str_ends_with($fullPath, '/')) {
         $fullPath .= '/';
     }
 

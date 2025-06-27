@@ -26,7 +26,7 @@ class CompileCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->filesystem = new Filesystem();
+        $this->filesystem = new Filesystem;
     }
 
     protected function configure(): void
@@ -47,8 +47,9 @@ class CompileCommand extends Command
         // Resolve working directory
         $workingDir = Path::makeAbsolute($workingDir, getcwd());
 
-        if (!$this->filesystem->exists($workingDir)) {
+        if (! $this->filesystem->exists($workingDir)) {
             $io->error("Working directory does not exist: {$workingDir}");
+
             return Command::FAILURE;
         }
 
@@ -58,25 +59,28 @@ class CompileCommand extends Command
         } else {
             // Look for box.json in working directory
             $configFile = Path::join($workingDir, 'box.json');
-            if (!$this->filesystem->exists($configFile)) {
+            if (! $this->filesystem->exists($configFile)) {
                 $configFile = Path::join($workingDir, 'box.json.dist');
             }
         }
 
-        if (!$this->filesystem->exists($configFile)) {
-            $io->error("No box.json configuration found.");
+        if (! $this->filesystem->exists($configFile)) {
+            $io->error('No box.json configuration found.');
+
             return Command::FAILURE;
         }
 
-        if (!$this->filesystem->exists(Path::join($workingDir, 'composer.json'))) {
-            $io->error("No composer.json found in the working directory");
+        if (! $this->filesystem->exists(Path::join($workingDir, 'composer.json'))) {
+            $io->error('No composer.json found in the working directory');
+
             return Command::FAILURE;
         }
 
         // Use Box from vendor directory
         $boxBinary = $this->resolveBoxBinary($workingDir);
-        if (!$this->filesystem->exists($boxBinary)) {
+        if (! $this->filesystem->exists($boxBinary)) {
             $io->error('Box binary not found at ./vendor/bin/box.');
+
             return Command::FAILURE;
         }
 
@@ -85,7 +89,7 @@ class CompileCommand extends Command
         $io->text("Working directory: {$workingDir}");
 
         // Prepare Box command arguments
-        $boxArgs = [$boxBinary, 'compile', '--config=' . $configFile];
+        $boxArgs = [$boxBinary, 'compile', '--config='.$configFile];
 
         // Add options
         if ($input->getOption('debug')) {
@@ -116,9 +120,9 @@ class CompileCommand extends Command
             $this->showOutputInfo($configFile, $workingDir, $io);
         } else {
             $io->error('PHAR compilation failed!');
-            
+
             $errorOutput = $process->getErrorOutput();
-            if (!empty($errorOutput)) {
+            if (! empty($errorOutput)) {
                 $io->text($errorOutput);
             }
         }
@@ -126,17 +130,16 @@ class CompileCommand extends Command
         return $exitCode;
     }
 
-
     private function showOutputInfo(string $configFile, string $workingDir, SymfonyStyle $io): void
     {
         $config = json_decode(file_get_contents($configFile), true);
         $outputPath = $config['output'] ?? null;
-        
+
         if ($outputPath) {
-            $fullOutputPath = Path::isAbsolute($outputPath) 
-                ? $outputPath 
+            $fullOutputPath = Path::isAbsolute($outputPath)
+                ? $outputPath
                 : Path::join($workingDir, $outputPath);
-            
+
             if ($this->filesystem->exists($fullOutputPath)) {
                 $fileSize = filesize($fullOutputPath);
                 $io->definitionList(
@@ -151,7 +154,7 @@ class CompileCommand extends Command
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $factor = floor((strlen((string) $bytes) - 1) / 3);
-        
+
         return sprintf('%.2f %s', $bytes / (1024 ** $factor), $units[$factor]);
     }
 
@@ -173,11 +176,12 @@ class CompileCommand extends Command
         $command = PHP_OS_FAMILY === 'Windows' ? ['where', 'box'] : ['which', 'box'];
         $process = new Process($command);
         $process->run();
-        
+
         if ($process->isSuccessful()) {
             $output = trim($process->getOutput());
-            if (!empty($output)) {
+            if (! empty($output)) {
                 $lines = explode("\n", $output);
+
                 return trim($lines[0]);
             }
         }

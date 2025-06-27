@@ -23,7 +23,7 @@ class RealPathMod implements Compactor
             return $this->modifySplFileInfo($contents);
         }
 
-        // Handle LoadConfiguration modifications  
+        // Handle LoadConfiguration modifications
         if (preg_match(self::FILE_PATTERNS['LoadConfiguration'], $normalizedFile)) {
             return $this->modifyLoadConfiguration($contents);
         }
@@ -43,11 +43,12 @@ class RealPathMod implements Compactor
 
     private function modifySplFileInfo(string $contents): string
     {
-        if (!str_contains($contents, 'getRealPath')) {
+        if (! str_contains($contents, 'getRealPath')) {
             $trimmed = rtrim(trim($contents), '}');
-            return $trimmed . "\n    public function getRealPath(): string|false\n    {\n        return \$this->getPathname() ?? false;\n    }\n}";
+
+            return $trimmed."\n    public function getRealPath(): string|false\n    {\n        return \$this->getPathname() ?? false;\n    }\n}";
         }
-        
+
         return $contents;
     }
 
@@ -63,8 +64,8 @@ class RealPathMod implements Compactor
     private function modifyBladeIconsServiceProvider(string $contents): string
     {
         $pattern = '/return \$this->app->bootstrapPath\(\'cache\/blade-icons\.php\'\);/';
-        $replacement = 'if (!empty(env(\'APP_SERVICES_CACHE\'))) {' .
-                      'return dirname(env(\'APP_SERVICES_CACHE\')) . DIRECTORY_SEPARATOR . \'blade-icons.php\';' .
+        $replacement = 'if (!empty(env(\'APP_SERVICES_CACHE\'))) {'.
+                      'return dirname(env(\'APP_SERVICES_CACHE\')) . DIRECTORY_SEPARATOR . \'blade-icons.php\';'.
                       '} return $this->app->bootstrapPath(\'cache/blade-icons.php\');';
 
         return preg_replace($pattern, $replacement, $contents);
@@ -75,7 +76,7 @@ class RealPathMod implements Compactor
         // Handle fully qualified calls (\realpath) - be more precise with negative lookbehind
         $contents = preg_replace('/(?<![a-zA-Z0-9_])\\\\realpath\(/', '\\nativephp_rp(', $contents);
 
-        // Handle regular calls (realpath) - be more precise with negative lookbehind  
+        // Handle regular calls (realpath) - be more precise with negative lookbehind
         $contents = preg_replace('/(?<![a-zA-Z0-9_\\\\])realpath\(/', '\\nativephp_rp(', $contents);
 
         return $contents;

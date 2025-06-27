@@ -15,11 +15,11 @@ class Request extends IlluminateRequest
 
     public function hydrateFromCli(string $method, string $uri, ?string $data = null, ?string $headers = null)
     {
-        if ($headers != "") {
+        if ($headers != '') {
             $this->request->headers = json_decode($data, true);
         }
 
-        if ($data != "") {
+        if ($data != '') {
             $this->request->add(json_decode($data, true));
         }
 

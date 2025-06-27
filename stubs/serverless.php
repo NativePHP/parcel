@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Contracts\Http\Kernel;
 use App\Native\Request;
+use Illuminate\Contracts\Http\Kernel;
 
 define('LARAVEL_START', microtime(true));
 
@@ -17,6 +17,6 @@ $response = $kernel->handle(
 
 $kernel->terminate($request, $response);
 
-echo $response->headers . "\r\n\n\r\n\n";
+echo $response->headers."\r\n\n\r\n\n";
 
 $response->sendContent();

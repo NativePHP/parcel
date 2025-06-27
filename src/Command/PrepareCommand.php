@@ -34,7 +34,7 @@ class PrepareCommand extends Command
         $pushStubsCommand = $this->getApplication()->find('push-stubs');
         $pushStubsInput = new ArrayInput([
             'target' => $target,
-            '--force' => $force
+            '--force' => $force,
         ]);
         $result = $pushStubsCommand->run($pushStubsInput, $output);
 
@@ -45,8 +45,9 @@ class PrepareCommand extends Command
         // Execute patch-composer command
         $patchComposerCommand = $this->getApplication()->find('patch-composer');
         $patchComposerInput = new ArrayInput([
-            'target' => $target
+            'target' => $target,
         ]);
+
         return $patchComposerCommand->run($patchComposerInput, $output);
     }
 }

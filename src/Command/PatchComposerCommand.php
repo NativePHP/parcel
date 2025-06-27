@@ -24,7 +24,7 @@ class PatchComposerCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->filesystem = new Filesystem();
+        $this->filesystem = new Filesystem;
     }
 
     protected function configure(): void
@@ -41,20 +41,23 @@ class PatchComposerCommand extends Command
 
         $targetDir = Path::makeAbsolute($targetDir, getcwd());
 
-        if (!$this->filesystem->exists($targetDir)) {
+        if (! $this->filesystem->exists($targetDir)) {
             $io->error("Target directory does not exist: {$targetDir}");
+
             return Command::FAILURE;
         }
 
         $composerJsonPath = Path::join($targetDir, 'composer.json');
-        if (!$this->filesystem->exists($composerJsonPath)) {
-            $io->error("composer.json not found in target directory");
+        if (! $this->filesystem->exists($composerJsonPath)) {
+            $io->error('composer.json not found in target directory');
+
             return Command::FAILURE;
         }
 
         $json = json_decode(file_get_contents($composerJsonPath), true);
-        if (!$json) {
-            $io->error("Invalid composer.json file");
+        if (! $json) {
+            $io->error('Invalid composer.json file');
+
             return Command::FAILURE;
         }
 

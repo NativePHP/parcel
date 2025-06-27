@@ -25,7 +25,7 @@ class PushStubsCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->filesystem = new Filesystem();
+        $this->filesystem = new Filesystem;
     }
 
     protected function configure(): void
@@ -45,13 +45,15 @@ class PushStubsCommand extends Command
         // Resolve target directory
         $targetDir = Path::makeAbsolute($targetDir, getcwd());
 
-        if (!$this->filesystem->exists($targetDir)) {
+        if (! $this->filesystem->exists($targetDir)) {
             $io->error("Target directory does not exist: {$targetDir}");
+
             return Command::FAILURE;
         }
 
-        if (!$this->filesystem->exists(Path::join($targetDir, 'artisan'))) {
+        if (! $this->filesystem->exists(Path::join($targetDir, 'artisan'))) {
             $io->error("Target directory doesn't appear to be a Laravel project (missing artisan file)");
+
             return Command::FAILURE;
         }
 
@@ -62,18 +64,18 @@ class PushStubsCommand extends Command
             'box.json',
             'box-helper.php',
             'phar-router.php',
-            'serverless.php'
+            'serverless.php',
         ];
 
         foreach ($stubFiles as $stubFile) {
             $source = Path::join($stubsDir, $stubFile);
             $target = Path::join($targetDir, $stubFile);
 
-            if (!$this->filesystem->exists($source)) {
+            if (! $this->filesystem->exists($source)) {
                 continue;
             }
 
-            if ($this->filesystem->exists($target) && !$force) {
+            if ($this->filesystem->exists($target) && ! $force) {
                 continue;
             }
 
@@ -89,7 +91,6 @@ class PushStubsCommand extends Command
         //     }
         // }
 
-
         return Command::SUCCESS;
     }
 
@@ -98,16 +99,16 @@ class PushStubsCommand extends Command
         // Try multiple approaches to find the stubs directory
         $possiblePaths = [
             // Local development or installation
-            __DIR__ . '/../../stubs',
-            
-            // Global installation via composer  
-            dirname(__DIR__, 3) . '/nativephp/parcel/stubs',
-            
+            __DIR__.'/../../stubs',
+
+            // Global installation via composer
+            dirname(__DIR__, 3).'/nativephp/parcel/stubs',
+
             // Alternative global installation path
-            dirname(__DIR__, 4) . '/stubs',
-            
+            dirname(__DIR__, 4).'/stubs',
+
             // Vendor installation
-            dirname(__DIR__, 2) . '/stubs',
+            dirname(__DIR__, 2).'/stubs',
         ];
 
         foreach ($possiblePaths as $path) {
@@ -118,8 +119,6 @@ class PushStubsCommand extends Command
         }
 
         // Default fallback to local development path
-        return __DIR__ . '/../../stubs';
+        return __DIR__.'/../../stubs';
     }
-
-
 }

@@ -16,10 +16,10 @@ class Application extends SymfonyApplication
     {
         parent::__construct('Parcel', '1.0.0');
 
-        $this->add(new PushStubsCommand());
-        $this->add(new PatchComposerCommand());
-        $this->add(new PrepareCommand());
-        $this->add(new CompileCommand());
+        $this->add(new PushStubsCommand);
+        $this->add(new PatchComposerCommand);
+        $this->add(new PrepareCommand);
+        $this->add(new CompileCommand);
     }
 
     public function getLongVersion(): string
