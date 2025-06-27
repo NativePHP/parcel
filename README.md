@@ -14,20 +14,41 @@ Make sure your global Composer bin directory is in your PATH.
 
 ## Usage
 
-### 1. Push Stubs to Laravel Project
+### Quick Start
 
 Navigate to your Laravel project and run:
 
 ```bash
-parcel push-stubs
+parcel prepare
+parcel compile
 ```
 
-This will:
-- Copy NativePHP-specific stub files to your project
-- Create a `box.json` configuration optimized for Laravel
-- Set up the RealPathMod compactor for PHAR compatibility
+### Individual Commands
 
-### 2. Compile PHAR
+#### 1. Prepare Project (Recommended)
+
+```bash
+parcel prepare
+```
+
+This combines both preparation steps:
+- Pushes NativePHP-specific stub files to your project
+- Patches composer.json for PHAR compatibility
+- Creates optimized Box configuration
+
+#### 2. Manual Steps (Optional)
+
+If you prefer to run steps individually:
+
+```bash
+# Push stub files and configuration
+parcel push-stubs
+
+# Patch composer.json
+parcel patch-composer
+```
+
+#### 3. Compile PHAR
 
 ```bash
 parcel compile
@@ -53,6 +74,16 @@ This will:
 
 ## Commands
 
+### `parcel prepare [target-dir]`
+
+Prepares a Laravel project for PHAR compilation by running both push-stubs and patch-composer.
+
+**Arguments:**
+- `target-dir` - Target Laravel project directory (default: current directory)
+
+**Options:**
+- `--force, -f` - Overwrite existing files
+
 ### `parcel push-stubs [target-dir]`
 
 Pushes NativePHP stubs and configuration to a Laravel project.
@@ -62,6 +93,13 @@ Pushes NativePHP stubs and configuration to a Laravel project.
 
 **Options:**
 - `--force, -f` - Overwrite existing files
+
+### `parcel patch-composer [target-dir]`
+
+Patches composer.json for NativePHP PHAR compilation.
+
+**Arguments:**
+- `target-dir` - Target Laravel project directory (default: current directory)
 
 ### `parcel compile [working-dir]`
 
@@ -73,8 +111,6 @@ Compiles a Laravel project into a PHAR using Box.
 **Options:**
 - `--config, -c` - Path to box.json configuration file
 - `--debug` - Enable debug output
-- `--no-parallel` - Disable parallel processing
-- `--no-restart` - Do not restart the PHP process
 
 ## License
 
