@@ -7,10 +7,21 @@ A Laravel PHAR bundler designed specifically for NativePHP applications. Parcel 
 Install Parcel globally via Composer:
 
 ```bash
-composer global require parcel/parcel
+composer global require nativephp/parcel
 ```
 
 Make sure your global Composer bin directory is in your PATH.
+
+### CI/CD Environment (AWS CodeBuild)
+
+For CI environments like AWS CodeBuild, you'll need to authenticate with the private repository. Set up authentication by configuring Composer with your credentials in the buildspec.yml or environment variables. For GitHub private repositories, use a personal access token:
+
+```bash
+composer config -g github-oauth.github.com $GITHUB_TOKEN
+composer global require nativephp/parcel
+```
+
+Ensure your `GITHUB_TOKEN` environment variable is configured in your CodeBuild project settings with appropriate repository access permissions.
 
 ## Usage
 
