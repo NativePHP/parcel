@@ -4,92 +4,94 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **Parcel**, a fork of [box-project/box](https://github.com/box-project/box) that adds conveniences for boxing up Laravel applications into `.phar` files, primarily for use with NativePHP. It's a PHP 8.2+ application that creates PHAR (PHP Archive) files with advanced features like PHP-Scoper integration, compaction, and requirement checking.
+**Parcel** is a standalone Laravel PHAR bundler specifically designed for NativePHP applications. Rather than maintaining a fork of Box, Parcel uses Box as a dependency and provides specialized tooling for Laravel/NativePHP deployment with enhanced path handling and PHAR optimization.
 
 ## Development Commands
 
 ### Essential Commands
-- `make help` - Show all available Makefile targets
 - `composer install` - Install dependencies
-- `make vendor_install` - Install dependencies and touch files
-- `make clean` - Clean all build artifacts
+- `composer qa` - Run full quality assurance (lint, static analysis, tests)
+- `composer test` - Run Pest tests in parallel
+- `composer pint` - Run Laravel Pint code formatter
+- `composer phpstan` - Run PHPStan static analysis
+- `composer static` - Run both Pint and PHPStan
 
-### Building & Compilation
-- `make compile` - Compile the application into a PHAR (creates `bin/box.phar`)
-- `make $(SCOPED_BOX_BIN)` - Build the scoped PHAR with PHP-Scoper isolation
-- `bin/box compile` - Use Box to compile PHARs from configuration
-- `bin/box validate` - Validate box.json configuration files
+### CLI Tool Commands
+- `bin/parcel prepare [target-dir]` - Prepare Laravel project (combines push-stubs and patch-composer)
+- `bin/parcel push-stubs [target-dir]` - Push NativePHP stubs to Laravel project
+- `bin/parcel patch-composer [target-dir]` - Patch composer.json for PHAR compatibility
+- `bin/parcel compile [working-dir]` - Compile Laravel project to PHAR using Box
 
-### Testing
-- `make test` - Run all tests (unit, integration, e2e)
-- `make phpunit` - Run PHPUnit tests only
-- `make phpunit_phar_readonly` - Run tests with phar.readonly=0
-- `make phpunit_phar_writeable` - Run tests with phar.readonly=1
-- `make test_e2e` - Run end-to-end tests
-- `vendor/bin/phpunit --testsuite=Tests` - Run specific test suite
-- `vendor/bin/phpunit --testsuite=AutoReviewTests` - Run auto-review tests
-
-### Code Quality
-- `make cs` - Fix code style (runs PHP-CS-Fixer, Rector, and Composer normalize)
-- `make cs_lint` - Check code style without fixing
-- `make autoreview` - Run all auto-review checks
-- `make infection` - Run Mutation testing with Infection
-- `make phpbench` - Run performance benchmarks
-
-### Requirement Checker
-- `make requirement_checker_check` - Run requirement checker tests
-- `make dump_requirement_checker` - Generate requirement checker artifacts
-- `cd requirement-checker && make check` - Run requirement checker validation
+### Global Installation Testing
+- `composer global require nativephp/parcel` - Install globally for testing
+- `parcel prepare` - Test global preparation
+- `parcel compile` - Test compilation from any directory
 
 ## Architecture
 
 ### Core Components
 
-**Main Classes:**
-- `KevinGH\Box\Box` - Core PHAR building engine with file processing, compaction, and signing
-- `KevinGH\Box\Configuration\Configuration` - Configuration management for box.json files
-- `KevinGH\Box\Console\Application` - Console application entry point with all commands
+**Symfony Console Application (`src/Application.php`):**
+- Main entry point that registers all commands
+- Simple extension of Symfony Console Application
 
-**Key Namespaces:**
-- `KevinGH\Box\Compactor\` - File compaction (PHP, JSON, PhpScoper, Placeholder replacement)
-- `KevinGH\Box\Console\Command\` - CLI commands (compile, diff, extract, info, verify, etc.)
-- `KevinGH\Box\Phar\` - PHAR manipulation (compression, signing, diffing, metadata)
-- `KevinGH\Box\PhpScoper\` - PHP-Scoper integration for namespace isolation
-- `KevinGH\Box\RequirementChecker\` - Runtime requirement validation
-- `KevinGH\Box\Composer\` - Composer integration and autoload handling
+**Commands (`src/Command/`):**
+- `PrepareCommand` - Streamlined project setup combining push-stubs and patch-composer
+- `PushStubsCommand` - Copies NativePHP stubs to Laravel projects
+- `PatchComposerCommand` - Modifies composer.json for PHAR compilation
+- `CompileCommand` - Wraps Box compilation with NativePHP enhancements
 
-### Configuration System
-- Primary config: `box.json` or `box.json.dist` (JSON Schema: `res/schema.json`)
-- PHP-Scoper config: `scoper.inc.php` for namespace isolation
-- Supports compactors, file filtering, signing algorithms, compression, metadata
+**RealPathMod Compactor (`src/Compactor/RealPathMod.php`):**
+- Replaces `realpath()` calls with `nativephp_rp()` for PHAR-compatible path resolution
+- Fixes Laravel's file path handling within PHAR environments
+- Includes hotfix for Blade Icons service provider path resolution
+- Modifies SplFileInfo to add proper `getRealPath()` method
 
-### Build Process
-1. Load and validate configuration
-2. Process files through compactors (PHP minification, JSON compaction, scoping)
-3. Handle Composer artifacts and autoloading
-4. Apply requirement checker if configured  
-5. Create PHAR with compression and signing
-6. Validate final PHAR integrity
+### Key Stub Files
 
-### Testing Strategy
-- **Unit Tests:** `tests/` - Core functionality testing
-- **Integration Tests:** Composer integration, PHAR operations
-- **E2E Tests:** Full compilation workflows via Makefile.e2e
-- **Benchmarks:** Performance testing in `tests/Benchmark/`
-- **Auto-Review:** Code quality and documentation validation
+**NativePHP Path Helper (`stubs/box-helper.php`):**
+- Cross-platform path normalization with `nativephp_rp()` function
+- Windows/Unix path compatibility
+- PHAR-aware path resolution that works with Laravel's expectations
 
-### Key Files
-- `bin/box` - Main CLI entry point
-- `src/functions.php` - Global utility functions
-- `res/requirement-checker/` - Runtime requirement validation components
-- `fixtures/` - Test fixtures and examples
-- `requirement-checker/` - Standalone requirement checker package
+**PHAR Router (`stubs/phar-router.php`):**
+- Web server routing for Laravel applications running from PHAR
+- Static asset serving with proper MIME types
+- Artisan CLI support
+
+**Bundle Configuration (`stubs/box.json`):**
+- Pre-configured Box settings for Laravel/NativePHP
+- Optimized file exclusions and inclusions
+- Integrated RealPathMod compactor usage
+
+**Custom Request Class (`stubs/App/Native/Request.php`):**
+- Laravel Request class for CLI-to-HTTP conversion in NativePHP context
+
+### Architecture Patterns
+- **Composition over Inheritance**: Uses Box as dependency rather than forking
+- **Command Pattern**: Symfony Console commands orchestrate Box operations
+- **Compactor Pattern**: RealPathMod enhances Box's compilation process
+
+## Testing Framework
+
+- **Pest PHP** - Main testing framework
+- Tests organized in `Feature/` and `Unit/` directories
+- `tests/Pest.php` configures test base classes
+- Run individual tests: `./vendor/bin/pest tests/Unit/NativePhpRpTest.php`
+
+## Code Quality Tools
+
+- **Laravel Pint** - Code formatting with Laravel preset
+- **PHPStan Level 5** - Static analysis on `src/` directory
+- Configuration files: `pint.json`, `phpstan.neon`
 
 ## Development Notes
 
-- PHP 8.2+ required with extensions: iconv, mbstring, phar
-- Uses Composer 2.2+ plugin API
-- Supports parallel processing via amphp/parallel
-- Heavy use of Symfony components (Finder, Process, Filesystem)
-- PHP-CS-Fixer for code style, Rector for modernization
-- Infection for mutation testing coverage
+- PHP 8.2+ required with ext-json and ext-phar
+- Uses Box 4.0+ as primary dependency
+- Symfony Console/Filesystem/Process components for CLI functionality
+- Global CLI tool installed via Composer bin
+
+### Path Resolution Architecture
+
+Most Laravel PHAR issues stem from `realpath()` not working in PHAR context. The RealPathMod compactor automatically replaces these calls with `nativephp_rp()` which provides cross-platform path normalization and PHAR-aware resolution.
