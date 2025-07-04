@@ -66,17 +66,17 @@
     "source": "https://github.com/NativePHP/parcel"
   },
   "scripts": {
-    "test": "./vendor/bin/pest -p",
-    "pint": "./vendor/bin/pint",
-    "phpstan": "./vendor/bin/phpstan",
+    "test": "pest --parallel",
+    "pint": "pint --parallel",
+    "phpstan": "phpstan analyse",
     "static": [
-      "@composer pint",
-      "@composer phpstan"
+      "@pint",
+      "@phpstan"
     ],
     "qa": [
-      "@composer pint",
-      "@composer phpstan",
-      "@composer test"
+      "@pint",
+      "@phpstan",
+      "@test"
     ]
   }
 }
