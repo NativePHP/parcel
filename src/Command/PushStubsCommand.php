@@ -64,7 +64,7 @@ class PushStubsCommand extends Command
             'box.json',
             'box-helper.php',
             'phar-router.php',
-            'serverless.php',
+            // 'serverless.php',
         ];
 
         foreach ($stubFiles as $stubFile) {
