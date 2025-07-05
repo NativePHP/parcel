@@ -1,7 +1,6 @@
 <?php
 
 // Determine if we're running in a CLI or under a SAPI and do the right thing
-
 if (php_sapi_name() == 'cli' && $argc > 0 && $argv[1] === 'artisan') {
     array_shift($argv);
     $_SERVER['argv'] = $argv;
