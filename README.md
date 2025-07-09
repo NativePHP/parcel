@@ -18,7 +18,7 @@ For CI environments like AWS CodeBuild, you'll need to authenticate with the pri
 
 ```bash
 composer config -g github-oauth.github.com $GITHUB_TOKEN
-composer global config repositories.repo-name vcs https://github.com/NativePHP/parcel.git
+composer global config repositories.nativephp-parcel vcs https://github.com/NativePHP/parcel.git
 composer global require nativephp/parcel:dev-main
 ```
 
