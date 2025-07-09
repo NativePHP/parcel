@@ -8,6 +8,7 @@ beforeEach(function () {
 
 afterEach(function () {
     // cleanupTempDirectory($this->tempWorkingDir);
+    dump('Temp working directory: ', $this->tempWorkingDir);
 });
 
 dataset('repositories', [
