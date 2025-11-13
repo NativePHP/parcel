@@ -76,3 +76,69 @@ function runNativePhpCommand(array $command, string $cwd, array $env = []): Proc
 
     return $process;
 }
+
+function startPhpServer(string $pharPath, int $port, string $cwd, array $env = []): array
+{
+    $process = new Process(
+        ['php', '-S', "localhost:{$port}", $pharPath],
+        $cwd,
+        $env
+    );
+    $process->setTimeout(null); // No timeout for server process
+    $process->start();
+
+    // If port is 0, PHP will choose a random port - we need to extract it from output
+    $actualPort = $port;
+    if ($port === 0) {
+        // Wait a bit for the server to output its startup message
+        usleep(200000); // 200ms
+
+        // Parse the server output to get the actual port
+        // Output format: "PHP 8.x.x Development Server (http://localhost:XXXXX) started"
+        $output = $process->getErrorOutput();
+        if (preg_match('/localhost:(\d+)/', $output, $matches)) {
+            $actualPort = (int) $matches[1];
+        }
+    }
+
+    return [$process, $actualPort];
+}
+
+function waitForServer(string $host, int $port, int $timeout = 5): bool
+{
+    $start = time();
+    while (time() - $start < $timeout) {
+        // Set a custom error handler that completely ignores warnings
+        $previousHandler = set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+            // Completely ignore the error, return true to prevent PHP's internal error handler
+            return true;
+        }, E_WARNING | E_NOTICE);
+
+        $connection = stream_socket_client(
+            "tcp://{$host}:{$port}",
+            $errno,
+            $errstr,
+            1,
+            STREAM_CLIENT_CONNECT
+        );
+
+        // Restore the previous error handler
+        restore_error_handler();
+
+        if ($connection !== false) {
+            fclose($connection);
+
+            return true;
+        }
+        usleep(100000); // Wait 100ms before retrying
+    }
+
+    return false;
+}
+
+function stopPhpServer(Process $process): void
+{
+    if ($process->isRunning()) {
+        $process->stop(3, SIGTERM);
+    }
+}
