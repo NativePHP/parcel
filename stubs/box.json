@@ -1,6 +1,6 @@
 {
     "chmod": "0700",
-    "shebang": false,
+    "stub": "custom-stub.php",
     "main": "phar-router.php",
     "banner": [
         "This is a NativePHP bundle",

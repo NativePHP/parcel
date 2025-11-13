@@ -64,6 +64,7 @@ class PushStubsCommand extends Command
             'box.json',
             'box-helper.php',
             'phar-router.php',
+            'custom-stub.php',
             // 'serverless.php',
         ];
 

@@ -153,7 +153,7 @@ class CompileCommand extends Command
     private function formatBytes(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB'];
-        $factor = floor((strlen((string) $bytes) - 1) / 3);
+        $factor = (int) floor((strlen((string) $bytes) - 1) / 3);
 
         return sprintf('%.2f %s', $bytes / (1024 ** $factor), $units[$factor]);
     }
