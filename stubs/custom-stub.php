@@ -2,6 +2,9 @@
 <?php
 
 /**
+ * This is a NativePHP bundle
+ * https://nativephp.com/
+ *
  * Custom PHAR stub for NativePHP applications
  * Allows cli-server SAPI for PHP built-in server (php -S)
  */

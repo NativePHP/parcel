@@ -2,16 +2,30 @@
     "chmod": "0700",
     "stub": "custom-stub.php",
     "main": "phar-router.php",
-    "banner": [
-        "This is a NativePHP bundle",
-        "https://nativephp.com/"
-    ],
     "directories": ["app", "bootstrap", "config", "database", "resources/views", "routes"],
     "directories-bin": ["public", "resources/css", "resources/js"],
     "files-bin": ["artisan", ".env", "composer.json", "phar-router.php", "box-helper.php"],
     "finder": [
         {
-            "notName": ["LICENSE", "*.md", "*.dist", "Makefile", "composer.json", "composer.lock"],
+            "notName": [
+                "LICENSE",
+                "*.md",
+                "*.dist",
+                "*.xml.dist",
+                "*.neon.dist",
+                "*.neon",
+                "Makefile",
+                "composer.json",
+                "composer.lock",
+                "phpunit*.xml",
+                "phpstan*",
+                ".php-cs-fixer.*",
+                "CHANGELOG*",
+                "UPGRADE*",
+                "CONTRIBUTING*",
+                ".gitignore",
+                ".gitattributes"
+            ],
             "exclude": [
                 "doc",
                 "docs",
@@ -20,6 +34,14 @@
                 "tests",
                 "Tests",
                 "bin",
+                ".github",
+                ".git",
+                "examples",
+                "example",
+                "samples",
+                "benchmarks",
+                "benchmark",
+                "fixtures",
                 "nativephp/php-bin",
                 "nativephp/electron/resources"
             ],
@@ -41,11 +63,13 @@
     "git-version": "package_version",
     "output": "build/__nativephp_app_bundle",
     "compression": "GZ",
+    "algorithm": "SHA256",
     "compactors": [
         "KevinGH\\Box\\Compactor\\Php",
         "KevinGH\\Box\\Compactor\\Json",
         "Parcel\\Compactor\\RealPathMod"
     ],
+    "annotations": true,
     "exclude-dev-files": false,
     "exclude-composer-files": false
 }
