@@ -18,7 +18,8 @@ function nativephp_rp($value = null, $pharPath = null): mixed
         // Check if path starts with mounted directories (storage, database, or bootstrap/cache)
         if (preg_match('#^(storage(/|$)|database(/|$)|bootstrap/cache(/|$))#', $normalizedValue)) {
             // Return direct filesystem path to external mounted directory
-            $externalPath = rtrim($appDataPath, '/\\') . '/app/' . $normalizedValue;
+            $externalPath = rtrim($appDataPath, '/\\').'/app/'.$normalizedValue;
+
             return str_replace('/', DIRECTORY_SEPARATOR, $externalPath);
         }
     }
