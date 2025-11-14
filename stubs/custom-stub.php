@@ -17,14 +17,15 @@ if (! in_array(PHP_SAPI, ['cli', 'cli-server', 'phpdbg', 'embed'], true)) {
 
 Phar::mapPhar('__nativephp_app_bundle');
 
-// Mount external directories if NATIVEPHP_APP_DATA_PATH is set
+// Configure runtime paths based on NATIVEPHP_APP_DATA_PATH
 $appDataPath = getenv('NATIVEPHP_APP_DATA_PATH');
 if ($appDataPath !== false && $appDataPath !== '') {
     $appDir = rtrim($appDataPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'app';
 
     // Create external directory structure
-    $storageLogs = $appDir.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'logs';
-    $storageFramework = $appDir.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework';
+    $storagePath = $appDir.DIRECTORY_SEPARATOR.'storage';
+    $storageLogs = $storagePath.DIRECTORY_SEPARATOR.'logs';
+    $storageFramework = $storagePath.DIRECTORY_SEPARATOR.'framework';
     $bootstrapCache = $appDir.DIRECTORY_SEPARATOR.'bootstrap'.DIRECTORY_SEPARATOR.'cache';
     $database = $appDir.DIRECTORY_SEPARATOR.'database';
 

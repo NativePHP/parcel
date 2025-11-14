@@ -7,12 +7,28 @@ function nativephp_rp($value = null, $pharPath = null): mixed
     }
 
     // Normalize slashes for cross-platform compatibility
+    $valPath = str_replace('\\', '/', (string) $value);
+
+    // Check if NATIVEPHP_APP_DATA_PATH is set and path should use mounted external directory
+    $appDataPath = getenv('NATIVEPHP_APP_DATA_PATH');
+    if ($appDataPath !== false && $appDataPath !== '') {
+        // Normalize the value path
+        $normalizedValue = ltrim($valPath, '/');
+
+        // Check if path starts with mounted directories (storage, database, or bootstrap/cache)
+        if (preg_match('#^(storage(/|$)|database(/|$)|bootstrap/cache(/|$))#', $normalizedValue)) {
+            // Return direct filesystem path to external mounted directory
+            $externalPath = rtrim($appDataPath, '/\\') . '/app/' . $normalizedValue;
+            return str_replace('/', DIRECTORY_SEPARATOR, $externalPath);
+        }
+    }
+
+    // Original realpath logic for non-mounted paths
     if ($pharPath === null) {
         $pharPath = str_replace('\\', '/', Phar::running());
     } else {
         $pharPath = str_replace('\\', '/', $pharPath);
     }
-    $valPath = str_replace('\\', '/', (string) $value);
 
     // Check for absolute paths (Windows: C:/, D:/, etc. and Unix: /)
     $isAbsolute = preg_match('/^(?:[a-zA-Z]:[\/\\\\]|\/|\\\\)/', $valPath);
