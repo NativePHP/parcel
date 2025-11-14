@@ -62,30 +62,25 @@ test('can create a bundle of a NativePHP project', function (string $repository)
     $bundleFile = $projectDir.'/build/__nativephp_app_bundle';
     expect($filesystem->exists($bundleFile))->toBeTrue('Bundle file not found: '.$bundleFile);
 
-    // Create necessary directories for NativePHP runtime
-    $filesystem->mkdir($projectDir.'/storage/logs');
-    $filesystem->mkdir($projectDir.'/storage/framework/cache');
-    $filesystem->mkdir($projectDir.'/storage/framework/sessions');
-    $filesystem->mkdir($projectDir.'/storage/framework/views');
-    $filesystem->mkdir($projectDir.'/storage/framework/testing');
-    $filesystem->mkdir($projectDir.'/bootstrap/cache');
-    $filesystem->mkdir($projectDir.'/database');
-    $filesystem->dumpFile($projectDir.'/database/database.sqlite', '');
+    // Create app data directory for NativePHP runtime
+    $appDataDir = $this->tempWorkingDir.'/app-data';
+    $filesystem->mkdir($appDataDir);
 
-    // Prepare environment variables similar to NativePHP
+    // Configure environment - stub will mount based on NATIVEPHP_APP_DATA_PATH
+    $appDir = $appDataDir.'/app';
     $env = [
+        'NATIVEPHP_APP_DATA_PATH' => $appDataDir,
         'APP_ENV' => 'production',
         'APP_DEBUG' => 'false',
-        'LARAVEL_STORAGE_PATH' => $projectDir.'/storage',
         'NATIVEPHP_RUNNING' => 'true',
-        'NATIVEPHP_STORAGE_PATH' => $projectDir.'/storage',
-        'NATIVEPHP_DATABASE_PATH' => $projectDir.'/database/database.sqlite',
-        // Cache paths for production mode
-        'APP_SERVICES_CACHE' => $projectDir.'/bootstrap/cache/services.php',
-        'APP_PACKAGES_CACHE' => $projectDir.'/bootstrap/cache/packages.php',
-        'APP_CONFIG_CACHE' => $projectDir.'/bootstrap/cache/config.php',
-        'APP_ROUTES_CACHE' => $projectDir.'/bootstrap/cache/routes-v7.php',
-        'APP_EVENTS_CACHE' => $projectDir.'/bootstrap/cache/events.php',
+        'LARAVEL_STORAGE_PATH' => $appDir.'/storage',
+        'NATIVEPHP_STORAGE_PATH' => $appDir.'/storage',
+        'NATIVEPHP_DATABASE_PATH' => $appDir.'/database/database.sqlite',
+        'APP_SERVICES_CACHE' => $appDir.'/bootstrap/cache/services.php',
+        'APP_PACKAGES_CACHE' => $appDir.'/bootstrap/cache/packages.php',
+        'APP_CONFIG_CACHE' => $appDir.'/bootstrap/cache/config.php',
+        'APP_ROUTES_CACHE' => $appDir.'/bootstrap/cache/routes-v7.php',
+        'APP_EVENTS_CACHE' => $appDir.'/bootstrap/cache/events.php',
     ];
 
     // Test that the bundle can execute artisan commands
@@ -141,29 +136,25 @@ test('can serve bundle via PHP built-in server and receive HTTP responses', func
     $bundleFile = $projectDir.'/build/__nativephp_app_bundle';
     expect($filesystem->exists($bundleFile))->toBeTrue('Bundle file not found: '.$bundleFile);
 
-    // Create necessary directories for NativePHP runtime
-    $filesystem->mkdir($projectDir.'/storage/logs');
-    $filesystem->mkdir($projectDir.'/storage/framework/cache');
-    $filesystem->mkdir($projectDir.'/storage/framework/sessions');
-    $filesystem->mkdir($projectDir.'/storage/framework/views');
-    $filesystem->mkdir($projectDir.'/storage/framework/testing');
-    $filesystem->mkdir($projectDir.'/bootstrap/cache');
-    $filesystem->mkdir($projectDir.'/database');
-    $filesystem->dumpFile($projectDir.'/database/database.sqlite', '');
+    // Create app data directory for NativePHP runtime
+    $appDataDir = $this->tempWorkingDir.'/app-data-http';
+    $filesystem->mkdir($appDataDir);
 
-    // Prepare environment variables
+    // Configure environment - stub will mount based on NATIVEPHP_APP_DATA_PATH
+    $appDir = $appDataDir.'/app';
     $env = [
+        'NATIVEPHP_APP_DATA_PATH' => $appDataDir,
         'APP_ENV' => 'production',
         'APP_DEBUG' => 'false',
-        'LARAVEL_STORAGE_PATH' => $projectDir.'/storage',
         'NATIVEPHP_RUNNING' => 'true',
-        'NATIVEPHP_STORAGE_PATH' => $projectDir.'/storage',
-        'NATIVEPHP_DATABASE_PATH' => $projectDir.'/database/database.sqlite',
-        'APP_SERVICES_CACHE' => $projectDir.'/bootstrap/cache/services.php',
-        'APP_PACKAGES_CACHE' => $projectDir.'/bootstrap/cache/packages.php',
-        'APP_CONFIG_CACHE' => $projectDir.'/bootstrap/cache/config.php',
-        'APP_ROUTES_CACHE' => $projectDir.'/bootstrap/cache/routes-v7.php',
-        'APP_EVENTS_CACHE' => $projectDir.'/bootstrap/cache/events.php',
+        'LARAVEL_STORAGE_PATH' => $appDir.'/storage',
+        'NATIVEPHP_STORAGE_PATH' => $appDir.'/storage',
+        'NATIVEPHP_DATABASE_PATH' => $appDir.'/database/database.sqlite',
+        'APP_SERVICES_CACHE' => $appDir.'/bootstrap/cache/services.php',
+        'APP_PACKAGES_CACHE' => $appDir.'/bootstrap/cache/packages.php',
+        'APP_CONFIG_CACHE' => $appDir.'/bootstrap/cache/config.php',
+        'APP_ROUTES_CACHE' => $appDir.'/bootstrap/cache/routes-v7.php',
+        'APP_EVENTS_CACHE' => $appDir.'/bootstrap/cache/events.php',
     ];
 
     // Start PHP built-in server on random port (0 = let OS choose)

@@ -49,6 +49,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Key Stub Files
 
+**Custom PHAR Stub (`stubs/custom-stub.php`):**
+- Entry point for NativePHP PHAR bundles
+- Handles NATIVEPHP_APP_DATA_PATH environment variable configuration
+- Auto-creates external runtime directories (storage/, database/, bootstrap/cache/)
+- Sets Laravel environment variables from single NATIVEPHP_APP_DATA_PATH
+- Allows cli, cli-server, phpdbg, and embed SAPIs
+
 **NativePHP Path Helper (`stubs/box-helper.php`):**
 - Cross-platform path normalization with `nativephp_rp()` function
 - Windows/Unix path compatibility
@@ -61,7 +68,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Bundle Configuration (`stubs/box.json`):**
 - Pre-configured Box settings for Laravel/NativePHP
-- Optimized file exclusions and inclusions
+- Optimized file exclusions and inclusions (excludes .sqlite files)
 - Integrated RealPathMod compactor usage
 
 **Custom Request Class (`stubs/App/Native/Request.php`):**
@@ -95,3 +102,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Path Resolution Architecture
 
 Most Laravel PHAR issues stem from `realpath()` not working in PHAR context. The RealPathMod compactor automatically replaces these calls with `nativephp_rp()` which provides cross-platform path normalization and PHAR-aware resolution.
+
+### Runtime Path Management with Phar::mount()
+
+Parcel uses `Phar::mount()` to transparently redirect runtime directories from inside the PHAR to external filesystem locations, configured via a single environment variable:
+
+**NATIVEPHP_APP_DATA_PATH Environment Variable:**
+- Single variable that drives all runtime path mounting
+- Automatically creates external directory structure: `$NATIVEPHP_APP_DATA_PATH/app/{storage,database,bootstrap/cache}`
+- Uses `Phar::mount()` to redirect PHAR paths to external filesystem
+- No environment variable pollution in the stub
+
+**External Directory Structure:**
+```
+$NATIVEPHP_APP_DATA_PATH/
+└── app/
+    ├── storage/
+    │   ├── logs/          (mounted to phar://storage/logs)
+    │   └── framework/     (mounted to phar://storage/framework)
+    ├── database/          (mounted to phar://database)
+    │   └── database.sqlite
+    └── bootstrap/
+        └── cache/         (mounted to phar://bootstrap/cache)
+```
+
+**PHAR Exclusions (box.json):**
+- `storage/logs` - excluded from PHAR, mounted at runtime
+- `storage/framework` - excluded from PHAR, mounted at runtime
+- `bootstrap/cache` - excluded from PHAR, mounted at runtime
+- `database/*.sqlite` - excluded from PHAR
+- `storage/app` - kept in PHAR for placeholder/gitignore files
+
+**Mounting Implementation:**
+The custom stub checks for `NATIVEPHP_APP_DATA_PATH`, creates the external directory structure, and uses `Phar::mount()` with relative paths:
+```php
+Phar::mount('storage/logs', $externalPath);
+Phar::mount('storage/framework', $externalPath);
+Phar::mount('bootstrap/cache', $externalPath);
+Phar::mount('database', $externalPath);
+```
+
+Laravel accesses these paths normally (e.g., `storage()->path('logs/laravel.log')`) and they're transparently redirected to external filesystem by the PHAR mounting.

@@ -48,17 +48,14 @@
             "in": "vendor"
         },
         {
-            "exclude": [
-                "logs",
-                "app/livewire-tmp",
-                "framework/sessions"
-            ],
-            "in": "storage"
-        },
-        {
             "notName": "*.sqlite",
             "in": "database"
         }
+    ],
+    "blacklist": [
+        "storage/logs",
+        "storage/framework",
+        "bootstrap/cache"
     ],
     "git-version": "package_version",
     "output": "build/__nativephp_app_bundle",
