@@ -22,7 +22,8 @@ class PrepareCommand extends Command
     {
         $this
             ->addArgument('target', InputArgument::OPTIONAL, 'Target Laravel project directory', '.')
-            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing files');
+            ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing files')
+            ->addOption('mobile', null, InputOption::VALUE_NONE, 'Use the NativePHP Mobile configuration (for an app staged by native:build)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -35,6 +36,7 @@ class PrepareCommand extends Command
         $pushStubsInput = new ArrayInput([
             'target' => $target,
             '--force' => $force,
+            '--mobile' => $input->getOption('mobile'),
         ]);
         $result = $pushStubsCommand->run($pushStubsInput, $output);
 

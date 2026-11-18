@@ -8,6 +8,7 @@ use Parcel\Command\CompileCommand;
 use Parcel\Command\PatchComposerCommand;
 use Parcel\Command\PrepareCommand;
 use Parcel\Command\PushStubsCommand;
+use Parcel\Command\SignCommand;
 use Symfony\Component\Console\Application as SymfonyApplication;
 
 class Application extends SymfonyApplication
@@ -20,5 +21,6 @@ class Application extends SymfonyApplication
         $this->add(new PatchComposerCommand);
         $this->add(new PrepareCommand);
         $this->add(new CompileCommand);
+        $this->add(new SignCommand);
     }
 }

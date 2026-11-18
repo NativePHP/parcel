@@ -33,6 +33,7 @@ class PushStubsCommand extends Command
         $this
             ->addArgument('target', InputArgument::OPTIONAL, 'Target Laravel project directory', '.')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Overwrite existing files')
+            ->addOption('mobile', null, InputOption::VALUE_NONE, 'Use the NativePHP Mobile configuration (for an app staged by native:build)')
             ->setHelp('This command copies NativePHP stubs and creates box.json configuration for a Laravel project.');
     }
 
@@ -51,26 +52,38 @@ class PushStubsCommand extends Command
             return Command::FAILURE;
         }
 
-        if (! $this->filesystem->exists(Path::join($targetDir, 'artisan'))) {
-            $io->error("Target directory doesn't appear to be a Laravel project (missing artisan file)");
+        $mobile = (bool) $input->getOption('mobile');
+
+        // A mobile build stages the app without artisan, so look for the
+        // file every Laravel app boots from instead.
+        $marker = $mobile ? 'bootstrap/app.php' : 'artisan';
+
+        if (! $this->filesystem->exists(Path::join($targetDir, $marker))) {
+            $io->error("Target directory doesn't appear to be a Laravel project (missing {$marker} file)");
 
             return Command::FAILURE;
         }
 
         $stubsDir = $this->getStubsDirectory();
 
-        // Copy individual stub files
-        $stubFiles = [
-            'box.json',
-            'box-helper.php',
-            'phar-router.php',
-            'custom-stub.php',
-            // 'serverless.php',
-        ];
+        // Copy individual stub files (stub => file in the project)
+        $stubFiles = $mobile
+            ? [
+                'mobile/box.json' => 'box.json',
+                'box-helper.php' => 'box-helper.php',
+                'mobile/mobile-stub.php' => 'mobile-stub.php',
+            ]
+            : [
+                'box.json' => 'box.json',
+                'box-helper.php' => 'box-helper.php',
+                'phar-router.php' => 'phar-router.php',
+                'custom-stub.php' => 'custom-stub.php',
+                // 'serverless.php' => 'serverless.php',
+            ];
 
-        foreach ($stubFiles as $stubFile) {
+        foreach ($stubFiles as $stubFile => $targetFile) {
             $source = Path::join($stubsDir, $stubFile);
-            $target = Path::join($targetDir, $stubFile);
+            $target = Path::join($targetDir, $targetFile);
 
             if (! $this->filesystem->exists($source)) {
                 continue;
