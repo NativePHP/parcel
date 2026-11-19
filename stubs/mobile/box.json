@@ -1,0 +1,55 @@
+{
+    "stub": "mobile-stub.php",
+    "main": false,
+    "check-requirements": false,
+    "dump-autoload": false,
+    "exclude-composer-files": false,
+    "files-bin": ["box-helper.php"],
+    "finder": [
+        {
+            "in": ".",
+            "notPath": ["#^(vendor|public|storage|build|tests|nativephp)/#"],
+            "exclude": ["node_modules"],
+            "notName": ["box.json", "box-helper.php", "mobile-stub.php", ".env", "*.phar", "*.sqlite", "*.sqlite-journal"]
+        },
+        {
+            "in": "vendor",
+            "notName": [
+                "LICENSE",
+                "*.md",
+                "*.dist",
+                "Makefile",
+                "phpunit*.xml",
+                "phpstan*",
+                ".php-cs-fixer.*",
+                "CHANGELOG*",
+                "UPGRADE*",
+                "CONTRIBUTING*"
+            ],
+            "exclude": [
+                "doc",
+                "docs",
+                "test",
+                "test_old",
+                "tests",
+                "Tests",
+                "examples",
+                "example",
+                "fixtures",
+                "benchmarks",
+                "benchmark",
+                "nativephp/mobile/resources",
+                "nativephp/mobile/vendor",
+                "endroid"
+            ]
+        }
+    ],
+    "output": "build/__nativephp_app_bundle.phar",
+    "compression": "GZ",
+    "algorithm": "SHA256",
+    "compactors": [
+        "KevinGH\\Box\\Compactor\\Php",
+        "KevinGH\\Box\\Compactor\\Json",
+        "Parcel\\Compactor\\RealPathMod"
+    ]
+}

@@ -18,27 +18,81 @@ class RealPathMod implements Compactor
     {
         $normalizedFile = str_replace('\\', '/', $file);
 
-        // Handle SplFileInfo modifications
+        if (! str_ends_with($normalizedFile, '.php')) {
+            return $contents;
+        }
+
+        // A few files need more than the general rewrites below, never
+        // instead of them: LoadConfiguration also calls realpath() on the
+        // config path, and left alone it finds no config files at all.
         if (preg_match(self::FILE_PATTERNS['SplFileInfo'], $normalizedFile)) {
-            return $this->modifySplFileInfo($contents);
+            $contents = $this->modifySplFileInfo($contents);
+        } elseif (preg_match(self::FILE_PATTERNS['LoadConfiguration'], $normalizedFile)) {
+            $contents = $this->modifyLoadConfiguration($contents);
+        } elseif (preg_match(self::FILE_PATTERNS['BladeIconsServiceProvider'], $normalizedFile)) {
+            $contents = $this->modifyBladeIconsServiceProvider($contents);
         }
 
-        // Handle LoadConfiguration modifications
-        if (preg_match(self::FILE_PATTERNS['LoadConfiguration'], $normalizedFile)) {
-            return $this->modifyLoadConfiguration($contents);
+        return $this->replaceGlobCalls($this->replaceRealpathCalls($contents));
+    }
+
+    /**
+     * Point calls to the global glob() at nativephp_glob(), which can see
+     * inside the phar. Works on tokens so that methods called glob, like
+     * Filesystem::glob(), keep their declarations and call sites.
+     */
+    private function replaceGlobCalls(string $contents): string
+    {
+        if (stripos($contents, 'glob') === false) {
+            return $contents;
         }
 
-        // Handle Blade Icons service provider
-        if (preg_match(self::FILE_PATTERNS['BladeIconsServiceProvider'], $normalizedFile)) {
-            return $this->modifyBladeIconsServiceProvider($contents);
+        $tokens = \PhpToken::tokenize($contents);
+        $count = count($tokens);
+        $previous = null;
+        $output = '';
+
+        foreach ($tokens as $index => $token) {
+            if ($this->isGlobFunctionCall($token, $previous, $tokens, $index, $count)) {
+                $output .= '\\nativephp_glob';
+                $previous = $token;
+
+                continue;
+            }
+
+            $output .= $token->text;
+
+            if (! $token->isIgnorable()) {
+                $previous = $token;
+            }
         }
 
-        // Handle general PHP files for realpath replacement
-        if (str_ends_with($normalizedFile, '.php')) {
-            return $this->replaceRealpathCalls($contents);
+        return $output;
+    }
+
+    /**
+     * @param  list<\PhpToken>  $tokens
+     */
+    private function isGlobFunctionCall(\PhpToken $token, ?\PhpToken $previous, array $tokens, int $index, int $count): bool
+    {
+        $name = strtolower($token->text);
+
+        if (! ($token->is(T_STRING) && $name === 'glob') && ! ($token->is(T_NAME_FULLY_QUALIFIED) && $name === '\\glob')) {
+            return false;
         }
 
-        return $contents;
+        // A declaration, a method or static call, or a constant: not ours.
+        if ($previous?->is([T_FUNCTION, T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW, T_CONST])) {
+            return false;
+        }
+
+        for ($next = $index + 1; $next < $count; $next++) {
+            if (! $tokens[$next]->isIgnorable()) {
+                return $tokens[$next]->text === '(';
+            }
+        }
+
+        return false;
     }
 
     private function modifySplFileInfo(string $contents): string
