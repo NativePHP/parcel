@@ -12,18 +12,6 @@ composer global require nativephp/parcel
 
 Make sure your global Composer bin directory is in your PATH.
 
-### CI/CD Environment (AWS CodeBuild)
-
-For CI environments like AWS CodeBuild, you'll need to authenticate with the private repository. Set up authentication by configuring Composer with your credentials in the buildspec.yml or environment variables. For GitHub private repositories, use a personal access token:
-
-```bash
-composer config -g github-oauth.github.com $GITHUB_TOKEN
-composer global config repositories.nativephp-parcel vcs https://github.com/NativePHP/parcel.git
-composer global require nativephp/parcel:dev-main
-```
-
-Ensure your `GITHUB_TOKEN` environment variable is configured in your CodeBuild project settings with appropriate repository access permissions.
-
 ## Usage
 
 ### Quick Start
@@ -124,6 +112,10 @@ Compiles a Laravel project into a PHAR using Box.
 - `--config, -c` - Path to box.json configuration file
 - `--debug` - Enable debug output
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues as described in [SECURITY.md](SECURITY.md), not in public issues.
+
 ## License
 
-MIT License
+Parcel is open-source software licensed under the [MIT license](LICENSE.md).
