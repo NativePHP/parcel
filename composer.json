@@ -23,6 +23,7 @@
   ],
   "require": {
     "php": "^8.2",
+    "composer-runtime-api": "^2.0",
     "ext-json": "*",
     "ext-phar": "*",
     "ext-openssl": "*",
