@@ -139,6 +139,7 @@ function waitForServer(string $host, int $port, int $timeout = 5): bool
 function stopPhpServer(Process $process): void
 {
     if ($process->isRunning()) {
-        $process->stop(3, SIGTERM);
+        // There are no signals on Windows; Process::stop() handles that itself.
+        $process->stop(3, defined('SIGTERM') ? SIGTERM : null);
     }
 }

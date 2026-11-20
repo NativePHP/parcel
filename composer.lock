@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "769e1b0f2d46118ea7eb263b4d794b8c",
+    "content-hash": "690e0301fd3d7d9034efb13ce0ee3437",
     "packages": [
         {
             "name": "amphp/amp",
@@ -1282,16 +1282,16 @@
         },
         {
             "name": "humbug/box",
-            "version": "4.6.10",
+            "version": "4.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/box-project/box.git",
-                "reference": "6dc6a1314d63e9d75c8195c996e1081e68514c36"
+                "reference": "c4a66b68c170d98feeb80ed7e047e611485d34ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/box-project/box/zipball/6dc6a1314d63e9d75c8195c996e1081e68514c36",
-                "reference": "6dc6a1314d63e9d75c8195c996e1081e68514c36",
+                "url": "https://api.github.com/repos/box-project/box/zipball/c4a66b68c170d98feeb80ed7e047e611485d34ff",
+                "reference": "c4a66b68c170d98feeb80ed7e047e611485d34ff",
                 "shasum": ""
             },
             "require": {
@@ -1390,9 +1390,10 @@
             ],
             "support": {
                 "issues": "https://github.com/box-project/box/issues",
-                "source": "https://github.com/box-project/box/tree/4.6.10"
+                "source": "https://github.com/box-project/box/tree/4.7.1"
             },
-            "time": "2025-10-31T18:38:02+00:00"
+            "time": "2026-10-27T10:00:32+00:00",
+            "published-time": "2026-10-27T10:03:43+00:00"
         },
         {
             "name": "humbug/php-scoper",
@@ -6599,8 +6600,8 @@
         "php": "^8.2",
         "composer-runtime-api": "^2.0",
         "ext-json": "*",
-        "ext-phar": "*",
-        "ext-openssl": "*"
+        "ext-openssl": "*",
+        "ext-phar": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.11.0"

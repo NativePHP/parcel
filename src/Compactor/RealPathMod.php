@@ -12,6 +12,7 @@ class RealPathMod implements Compactor
         'SplFileInfo' => '/[\/\\\\]SplFileInfo\.php$/',
         'LoadConfiguration' => '/[\/\\\\]LoadConfiguration\.php$/',
         'BladeIconsServiceProvider' => '/[\/\\\\]BladeIconsServiceProvider\.php$/',
+        'Application' => '/[\/\\\\]Illuminate[\/\\\\]Foundation[\/\\\\]Application\.php$/',
     ];
 
     public function compact(string $file, string $contents): string
@@ -31,6 +32,8 @@ class RealPathMod implements Compactor
             $contents = $this->modifyLoadConfiguration($contents);
         } elseif (preg_match(self::FILE_PATTERNS['BladeIconsServiceProvider'], $normalizedFile)) {
             $contents = $this->modifyBladeIconsServiceProvider($contents);
+        } elseif (preg_match(self::FILE_PATTERNS['Application'], $normalizedFile)) {
+            $contents = $this->modifyApplication($contents);
         }
 
         return $this->replaceGlobCalls($this->replaceRealpathCalls($contents));
@@ -123,6 +126,27 @@ class RealPathMod implements Compactor
                       '} return $this->app->bootstrapPath(\'cache/blade-icons.php\');';
 
         return preg_replace($pattern, $replacement, $contents);
+    }
+
+    /**
+     * Laravel counts an APP_*_CACHE path as absolute only when it starts
+     * with / or \. On Windows NativePHP passes C:\... paths, so Laravel put
+     * the base path in front of them: inside the phar, where the package
+     * manifest can't be written and the app won't boot. Count drive letters
+     * as absolute too. The line is the same in Laravel 10 to 13.
+     */
+    private function modifyApplication(string $contents): string
+    {
+        $drives = implode(', ', array_map(
+            fn (string $letter) => "'{$letter}:'",
+            [...range('A', 'Z'), ...range('a', 'z')],
+        ));
+
+        return str_replace(
+            "protected \$absoluteCachePathPrefixes = ['/', '\\\\'];",
+            "protected \$absoluteCachePathPrefixes = ['/', '\\\\', {$drives}];",
+            $contents
+        );
     }
 
     private function replaceRealpathCalls(string $contents): string
