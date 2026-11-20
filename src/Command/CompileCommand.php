@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Parcel\Command;
 
+use Composer\InstalledVersions;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -160,6 +161,24 @@ class CompileCommand extends Command
 
     private function resolveBoxBinary(string $workingDir): string
     {
+        // Box loads Parcel's compactors, so it has to run with an autoloader
+        // that has Parcel in it: the one from the vendor/ Composer installed
+        // this copy of Parcel into. In a checkout that's Parcel's own vendor/.
+        // Installed as a package (globally, say) Box sits next to Parcel in
+        // the shared vendor/, and Parcel has no vendor/ of its own. A Box
+        // from anywhere else can't find Parcel\Compactor\RealPathMod.
+        if (InstalledVersions::isInstalled('humbug/box')) {
+            $installPath = InstalledVersions::getInstallPath('humbug/box');
+
+            if ($installPath !== null) {
+                $boxBinary = Path::canonicalize(Path::join(dirname($installPath, 2), 'bin', 'box'));
+
+                if ($this->filesystem->exists($boxBinary)) {
+                    return $boxBinary;
+                }
+            }
+        }
+
         // When in local development, prefer the vendor/bin/box binary
         $localBoxBinary = Path::join($workingDir, 'vendor/bin/box');
         if ($this->filesystem->exists($localBoxBinary)) {

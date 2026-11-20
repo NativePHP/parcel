@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3483af75f727ade7b89568053d83b883",
+    "content-hash": "690e0301fd3d7d9034efb13ce0ee3437",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5170,7 +5170,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-11T15:18:17+00:00"
+            "time": "2025-11-11T15:18:17+00:00",
+            "published-time": "2025-11-11T15:18:29+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -6597,6 +6598,7 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2",
+        "composer-runtime-api": "^2.0",
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-phar": "*"
