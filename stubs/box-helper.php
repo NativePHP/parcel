@@ -1,6 +1,6 @@
 <?php
 
-function nativephp_rp($value = null, $pharPath = null): mixed
+function nativephp_rp($value = null, $pharPath = null, string $separator = DIRECTORY_SEPARATOR): mixed
 {
     if ($value === null || $value === '') {
         return $value;
@@ -27,7 +27,7 @@ function nativephp_rp($value = null, $pharPath = null): mixed
             $normalizedPath .= '/';
         }
 
-        return str_replace('/', DIRECTORY_SEPARATOR, $normalizedPath);
+        return nativephp_rp_separators($normalizedPath, $separator);
     }
 
     // Handle relative paths
@@ -53,7 +53,18 @@ function nativephp_rp($value = null, $pharPath = null): mixed
         $fullPath .= '/';
     }
 
-    return str_replace('/', DIRECTORY_SEPARATOR, $fullPath);
+    return nativephp_rp_separators($fullPath, $separator);
+}
+
+/**
+ * Real paths get the platform's separator. phar:// paths are stream URLs
+ * and keep their forward slashes: turned into "phar:\\C:\\..." on Windows,
+ * PHP no longer reads them as a phar, and a bundled app can't even find
+ * its config directory.
+ */
+function nativephp_rp_separators(string $path, string $separator): string
+{
+    return str_starts_with($path, 'phar://') ? $path : str_replace('/', $separator, $path);
 }
 
 /**
