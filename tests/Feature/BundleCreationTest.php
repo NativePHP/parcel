@@ -91,7 +91,7 @@ test('can create a bundle of a NativePHP project', function (string $repository)
     // Test that the bundle can execute artisan commands
     // php artisan --version doesn't really test the app. But test the basic router functionality
     $artisanProcess = runNativePhpCommand(['__nativephp_app_bundle', 'artisan', '--version'], $projectDir.'/build/', $env);
-    expect($artisanProcess->isSuccessful())->toBeTrue('Failed to run artisan list: '.$artisanProcess->getErrorOutput());
+    expect($artisanProcess->isSuccessful())->toBeTrue("Failed to run artisan --version (exit {$artisanProcess->getExitCode()}):\n".$artisanProcess->getErrorOutput()."\n".substr($artisanProcess->getOutput(), 0, 4000));
     expect($artisanProcess->getOutput())->toContain('Laravel');
 
 })->with('repositories');
@@ -192,10 +192,10 @@ test('can serve bundle via PHP built-in server and receive HTTP responses', func
 
         // Check we get an HTTP response (200 or 500 is fine - NativePHP needs Electron wrapper)
         $statusLine = $http_response_header[0] ?? '';
-        expect($statusLine)->toMatch('/HTTP\/1\.[01] (200|500)/');
+        expect($statusLine)->toMatch('/HTTP\/1\.[01] (200|500)/', "Unexpected status. Body:\n".substr((string) $response, 0, 4000));
 
         // Check for HTML content (even error pages are HTML from Laravel/Symfony)
-        expect($response)->toContain('<html');
+        expect(str_contains((string) $response, '<html'))->toBeTrue("{$statusLine} with no HTML. Body:\n".substr((string) $response, 0, 4000)."\nServer output:\n".substr($serverProcess->getErrorOutput().$serverProcess->getOutput(), -4000));
 
         // Test 2: Try to request a static asset if one exists
         // Just verify the server responds to asset requests (200 or 404 is fine)
