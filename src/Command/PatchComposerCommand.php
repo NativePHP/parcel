@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Parcel\Command;
 
+use stdClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -54,24 +55,27 @@ class PatchComposerCommand extends Command
             return Command::FAILURE;
         }
 
-        $json = json_decode(file_get_contents($composerJsonPath), true);
-        if (! $json) {
+        // Decode to objects, not arrays. An array can't tell an empty object
+        // from an empty list, so "autoload-dev": {} would come back as [] and
+        // Composer refuses to dump the autoloader for it.
+        $json = json_decode(file_get_contents($composerJsonPath));
+        if (! $json instanceof stdClass) {
             $io->error('Invalid composer.json file');
 
             return Command::FAILURE;
         }
 
-        $autoloadFiles = $json['autoload']['files'] ?? [];
-        $autoloadFiles[] = 'box-helper.php';
-        $json['autoload']['files'] = $autoloadFiles;
+        $autoload = (object) ($json->autoload ?? new stdClass);
+        $autoload->files = [...($autoload->files ?? []), 'box-helper.php'];
+        $json->autoload = $autoload;
 
-        $postAutoloadDump = $json['scripts']['post-autoload-dump'] ?? [];
-        foreach ($postAutoloadDump as $key => $value) {
-            if (str_contains($value, 'bin/testbench')) {
-                unset($postAutoloadDump[$key]);
-            }
-        }
-        $json['scripts']['post-autoload-dump'] = array_values($postAutoloadDump);
+        $scripts = (object) ($json->scripts ?? new stdClass);
+        $postAutoloadDump = (array) ($scripts->{'post-autoload-dump'} ?? []);
+        $scripts->{'post-autoload-dump'} = array_values(array_filter(
+            $postAutoloadDump,
+            fn ($script) => ! str_contains($script, 'bin/testbench'),
+        ));
+        $json->scripts = $scripts;
 
         file_put_contents($composerJsonPath, json_encode($json, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
 
